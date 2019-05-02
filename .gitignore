@@ -1,0 +1,13 @@
+**/.vs/
+**/*.csproj.user
+packages/
+**/packages.config
+
+Bins/
+Test/
+
+*.DotSettings.user
+/Extract/bin
+/Extract/obj
+/uTinyRipperUtility/bin
+/uTinyRipperUtility/obj
