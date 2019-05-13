@@ -116,25 +116,10 @@ namespace Extract
             fileCollection.AssemblyManager.ScriptingBackEnd = ScriptingBackEnd.Mono;
             var assemblyManager = (AssemblyManager)fileCollection.AssemblyManager;
             fileCollection.AssemblyManager.Load(dllPath);
-            fileCollection.AssemblyManager.Load(@"C:\Program Files (x86)\Steam\steamapps\common\Pathfinder Kingmaker\Kingmaker_Data\Managed\UnityModManager\UnityModManager.dll");
             fileCollection.Exporter.Export(ExportPath, fileCollection, new Object[] { });
             ScriptExportManager scriptManager = new ScriptExportManager(ExportPath);
             AssemblyDefinition myLibrary = AssemblyDefinition.ReadAssembly(dllPath);
             var refrences = myLibrary.MainModule.AssemblyReferences;
-            var reference = refrences.First().Name;
-            foreach (ModuleDefinition module in myLibrary.Modules)
-            {
-                foreach (TypeDefinition type in module.Types)
-                {
-                    continue;
-                    if (!type.IsClass || type.Name == "<Module>") continue;
-                    var libName = myLibrary.Name.Name;
-                    var @namespace = type.Namespace;
-                    var className = type.Name;
-                    var exportType = assemblyManager.CreateExportType(scriptManager, libName, @namespace, className);
-                    scriptManager.Export(exportType);
-                }
-            }
             foreach (TypeDefinition type in myLibrary.MainModule.Types)
             {
                 if (!type.IsClass || type.Name == "<Module>") continue;
@@ -144,10 +129,6 @@ namespace Extract
                 var exportType = assemblyManager.CreateExportType(scriptManager, libName, @namespace, className);
                 scriptManager.Export(exportType);
             }
-            //fileCollection.AssemblyManager.CreateExportType();
-            //CreateExportType(exportManager, AssemblyName, Namespace, ClassName);
-            //scriptManager.ExportRest();
-
         }
         void DoExportAll()
         {
@@ -180,7 +161,6 @@ namespace Extract
             fileCollection.Load(filePath);
             var gameAssets = fileCollection.Files.First(f => f is SerializedFile sf && sf.FilePath == filePath);
             var assets = gameAssets.FetchAssets().Where(o => o is MonoScript ms && selector(ms)).ToArray();
-
             ScriptExportManager scriptManager = new ScriptExportManager(ExportPath);
             Dictionary<Object, ScriptExportType> exportTypes = new Dictionary<Object, ScriptExportType>();
             foreach (Object asset in assets)
@@ -194,7 +174,6 @@ namespace Extract
                 string path = scriptManager.Export(exportType.Value);
             }
             //scriptManager.ExportRest();
-
             //ScriptFixer.FixScripts(ExportPath);
 
         }

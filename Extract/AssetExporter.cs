@@ -175,7 +175,6 @@ namespace Extract
                 var file = Util.FindFile(fileCollection, assetPath);
                 fileCollection.Exporter.Export($"{ExportPath}/{Path.GetFileName(assetPath)}", fileCollection, file.FetchAssets().Where(Selector));
             }
-
         }
         public static void Export(string gameDir, string assetPath, string exportPath, Func<Object, bool> selector = null)
         {

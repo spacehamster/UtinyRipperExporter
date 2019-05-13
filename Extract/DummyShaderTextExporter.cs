@@ -43,12 +43,10 @@ namespace Extract
         public static void ExportShader(Shader shader, IExportContainer container, Stream stream,
             Func<Version, GPUPlatform, ShaderTextExporter> exporterInstantiator)
         {
-            //shader.ExportBinary(container, fileStream, ShaderExporterInstantiator);
             if (Shader.IsSerialized(container.Version))
             {
                 using (ShaderWriter writer = new ShaderWriter(stream, shader, exporterInstantiator))
                 {
-                    //shader.ParsedForm.Export(writer);
                     writer.Write("Shader \"{0}\" {{\n", shader.ParsedForm.Name);
                     shader.ParsedForm.PropInfo.Export(writer);
                     writer.WriteIndent(1);
