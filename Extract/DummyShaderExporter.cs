@@ -54,7 +54,7 @@ namespace Extract
 
 
 
-        public bool IsHandle(Object asset)
+        public bool IsHandle(Object asset, ExportOptions exportOptions)
         {
             return true;
         }

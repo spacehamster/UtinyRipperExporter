@@ -47,7 +47,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <LangVersion>7.2</LangVersion>
+    <LangVersion>7.3</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
@@ -72,7 +72,6 @@
     <Compile Include="GameStructureExporter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ResourceHandler.cs" />
     <Compile Include="ScriptExporter.cs" />
     <Compile Include="ScriptFixer.cs" />
     <Compile Include="Util.cs" />

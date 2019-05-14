@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using uTinyRipper;
+using uTinyRipper.Assembly;
 using uTinyRipper.Classes;
 using uTinyRipper.SerializedFiles;
 
@@ -197,11 +198,21 @@ namespace Extract
             {
                 return no.ValidName;
             }
-            if(asset is MonoBehaviour mb && mb.IsScriptableObject())
+            if(asset is MonoBehaviour mb && mb.IsScriptableObject)
             {
                 return mb.Name;
             }
             return "";
+        }
+        public static void LoadFile(FileCollection fileCollection, string filePath)
+        {
+            var path = Path.GetDirectoryName(filePath);
+            var name = Path.GetFileName(filePath);
+            FileScheme scheme = FileCollection.LoadScheme(path, name);
+            IFileCollection collection = fileCollection;
+            IAssemblyManager manager = fileCollection.AssemblyManager;
+            typeof(FileList).GetMethod("AddFile", Util.AllBindingFlags)
+                .Invoke(fileCollection, new object[] {scheme, collection, manager});
         }
         public static void RandomizeAssetGuid(IEnumerable<uTinyRipper.Classes.Object> assets)
         {

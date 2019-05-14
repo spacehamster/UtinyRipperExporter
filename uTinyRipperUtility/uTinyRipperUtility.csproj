@@ -32,7 +32,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <LangVersion>7.2</LangVersion>
+    <LangVersion>7.3</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
@@ -52,7 +52,7 @@
   <ItemGroup>
     <Compile Include="..\UtinyRipper\uTinyRipperGUI\ThirdParty\**\*.cs" />
     <Compile Include="..\UtinyRipper\uTinyRipperGUI\Exporters\**\*.cs" />
-	<Compile Include="..\UtinyRipper\uTinyRipperGUI\Utils\*.cs" />
+    <Compile Include="..\UtinyRipper\uTinyRipperGUI\Utils\*.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(Platform)' == 'x86' ">
     <ContentWithTargetPath Include="..\UtinyRipper\uTinyRipperGUI\Libraries\x86\crunch_x86.dll">

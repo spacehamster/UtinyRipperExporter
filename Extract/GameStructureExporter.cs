@@ -2,15 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using uTinyRipper;
-using uTinyRipper.Assembly;
 using uTinyRipper.AssetExporters;
-using uTinyRipper.Classes;
-using uTinyRipper.SerializedFiles;
 using uTinyRipperGUI.Exporters;
 using DateTime = System.DateTime;
+using Version = uTinyRipper.Version;
 
 namespace Extract
 {
@@ -19,6 +15,7 @@ namespace Extract
         string GameDir;
         string AssetPath;
         string ExportPath;
+        ExportOptions options;
         GameStructure m_GameStructure = null;
         HashSet<string> m_LoadedFiles = new HashSet<string>();
         private GameStructureExporter(string gameDir, string exportPath, List<string> files)
@@ -26,15 +23,13 @@ namespace Extract
             GameDir = gameDir;
             AssetPath = gameDir;
             ExportPath = exportPath;
-            var assetPaths = (new List<string>()
+            options = new ExportOptions()
             {
-                GameDir,
-            });
-            assetPaths.AddRange(files);
-            assetPaths = assetPaths
-                .Where(f => !f.ToLower().EndsWith("resources.assets"))
-                .ToList();
-            m_GameStructure = GameStructure.Load(assetPaths);
+                Version = new Version(2017, 3, 0, VersionType.Final, 3),
+                Platform = Platform.NoTarget,
+                Flags = TransferInstructionFlags.NoTransferInstructionFlags,
+            };
+            m_GameStructure = GameStructure.Load(files);
             var fileCollection = m_GameStructure.FileCollection;
             var textureExporter = new TextureAssetExporter();
             var engineExporter = new EngineAssetExporter();
@@ -90,14 +85,50 @@ namespace Extract
                 lastUpdate = now;
             }
         }
-        public static void ExportGamestructure(string gameDir, string exportPath)
+        public static void ExportGameStructure(string gameDir, string exportPath)
         {
-            new GameStructureExporter(gameDir, exportPath, new List<string>()).Export();
+            new GameStructureExporter(gameDir, exportPath, new List<string>() { gameDir }).Export();
         }
-        public static void ExportMultiple(string gameDir, IEnumerable<string> assetPaths, string exportPath)
+        public static string ResolveBundleDepndency(string gameDir, string manifestPath, string bundleName)
+        {
+            var path = Util.NormalizePath(Path.Combine(Path.GetDirectoryName(manifestPath), bundleName));
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException($"Couldn't find bundle dependency {bundleName} for {manifestPath}");
+            }
+            return path;
+        }
+        public static void ExportBundles(string gameDir, IEnumerable<string> assetPaths, string exportPath, bool loadBundleDependencies = true)
         {
             Util.PrepareExportDirectory(exportPath);
-            new GameStructureExporter(gameDir, exportPath, assetPaths.ToList());
+            var paths = assetPaths.ToList();
+            paths.Add($"{gameDir}/Managed");
+            paths.Add($"{gameDir}/Resources/unity default resources");
+            paths.Add($"{gameDir}/Resources/unity_builtin_extra");
+            var toExportHashSet = new HashSet<string>(assetPaths.Select(p => Util.NormalizePath(p)));
+            if (loadBundleDependencies) {
+                var queue = new Queue<string>(paths);
+                while(queue.Count > 0)
+                {
+                    var currentAssetPath = queue.Dequeue();
+                    currentAssetPath = Util.NormalizePath(currentAssetPath);
+                    toExportHashSet.Add(currentAssetPath);
+                    if (File.Exists($"{currentAssetPath}.manifest"))
+                    {
+                        var toCheckList = Util.
+                            GetManifestDependencies($"{currentAssetPath}.manifest")
+                            .Select(name => ResolveBundleDepndency(gameDir, $"{currentAssetPath}.manifest", name));
+                        foreach(var toCheckPath in toCheckList)
+                        {
+                            if (!toExportHashSet.Contains(toCheckPath)){
+                                queue.Enqueue(toCheckPath);
+                            }
+                        }
+                    }
+                }
+            }
+            var toExportList = toExportHashSet.ToList();
+            new GameStructureExporter(gameDir, exportPath, toExportList).Export();
         }
     }
 }

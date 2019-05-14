@@ -41,13 +41,13 @@ namespace Extract
                     Config.IsGenerateGUIDByContent = o.GUIDByContent;
                     Config.IsExportDependencies = o.ExportDependencies;
                     if (o.File == null){
-                        GameStructureExporter.ExportGamestructure(o.GameDir, o.ExportDir);
+                        GameStructureExporter.ExportGameStructure(o.GameDir, o.ExportDir);
                     } else if(o.File.EndsWith(".dll"))
                     {
                         ScriptExporter.ExportDLL(o.GameDir, o.File, o.ExportDir);
                     } else
                     {
-                        AssetExporter.Export(o.GameDir, o.File, o.ExportDir);
+                        GameStructureExporter.ExportBundles(o.GameDir, new string[] { o.File }, o.ExportDir, true);
                     }
                 });
             sw.Stop();

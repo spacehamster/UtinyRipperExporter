@@ -12,6 +12,7 @@ using uTinyRipper.Classes;
 using uTinyRipperGUI.Exporters;
 using DateTime = System.DateTime;
 using Object = uTinyRipper.Classes.Object;
+using Version = uTinyRipper.Version;
 
 namespace Extract
 {
@@ -20,6 +21,7 @@ namespace Extract
         string GameDir;
         string AssetPath;
         string ExportPath;
+        ExportOptions options;
         FileCollection fileCollection;
         HashSet<string> m_LoadedFiles = new HashSet<string>();
         Func<Object, bool> Selector = NoScriptSelector;
@@ -39,10 +41,15 @@ namespace Extract
             ExportPath = exportPath;
             Util.PrepareExportDirectory(ExportPath);
             if (selector != null) Selector = selector;
+            options = new ExportOptions()
+            {
+                Version = new Version(2017, 3, 0, VersionType.Final, 3),
+                Platform = Platform.NoTarget,
+                Flags = TransferInstructionFlags.NoTransferInstructionFlags,
+            };
             fileCollection = new FileCollection(new FileCollection.Parameters()
             {
                 RequestAssemblyCallback = RequestAssembly,
-                RequestDependencyCallback = RequestDepency,
                 RequestResourceCallback = RequestResource
             });
             fileCollection.AssemblyManager.ScriptingBackEnd = ScriptingBackEnd.Mono;
@@ -93,14 +100,14 @@ namespace Extract
             };
             if (DependencyLookup.ContainsKey(dep))
             {
-                fileCollection.Load(DependencyLookup[dep]);
+                //fileCollection.Load(DependencyLookup[dep]);
                 Logger.Log(LogType.Debug, LogCategory.Debug, $"Loading cached dependency {DependencyLookup[dep]}");
                 return;
             }
             //TODO: why is there spaces?
             if(dep == "unity builtin extra")
             {
-                fileCollection.Load($"{GameDir}\\Resources\\unity_builtin_extra");
+                //fileCollection.Load($"{GameDir}\\Resources\\unity_builtin_extra");
                 Logger.Log(LogType.Debug, LogCategory.Debug, $"Loaded dependency unity builtin extra");
                 return;
             }
@@ -111,7 +118,7 @@ namespace Extract
                 {
 
                     DependencyLookup[dep] = depPath;
-                    fileCollection.Load(depPath);
+                    //fileCollection.Load(depPath);
                     Logger.Log(LogType.Debug, LogCategory.Debug, $"Loaded dependency {depPath}");
                     return;
                 }
@@ -123,6 +130,8 @@ namespace Extract
                 {
                     if (SeenDependencies.Contains(manifestDependency)) continue;
                     SeenDependencies.Add(manifestDependency);
+
+                    /*
                     using (var bundleFile = BundleFile.Load($"{GameDir}\\StreamingAssets\\Bundles\\{manifestDependency}"))
                     {
                         foreach (var entry in bundleFile.Metadata.Entries)
@@ -132,11 +141,11 @@ namespace Extract
                                 DependencyLookup[entry.Name.ToLower()] = entry.FilePath;
                             }
                         }
-                    }
+                    }*/
                 }
                 if (DependencyLookup.ContainsKey(dep))
                 {
-                    fileCollection.Load(DependencyLookup[dep]);
+                    //fileCollection.Load(DependencyLookup[dep]);
                     Logger.Log(LogType.Debug, LogCategory.Debug, $"Loaded bundle {DependencyLookup[dep]}");
                     return;
                 }
@@ -163,17 +172,17 @@ namespace Extract
         }
         private void Export(string assetPath)
         {
-            fileCollection.Load(AssetPath);
+            //fileCollection.Load(AssetPath);
             var file = Util.FindFile(fileCollection, assetPath);
-            fileCollection.Exporter.Export(ExportPath, fileCollection, file.FetchAssets().Where(Selector));
+            fileCollection.Exporter.Export(ExportPath, fileCollection, file.FetchAssets().Where(Selector), options);
         }
         private void ExportMultiple(IEnumerable<string> assetPaths)
         {
-            fileCollection.Load(assetPaths.ToList());
+            //fileCollection.Load(assetPaths.ToList());
             foreach (var assetPath in assetPaths)
             {
                 var file = Util.FindFile(fileCollection, assetPath);
-                fileCollection.Exporter.Export($"{ExportPath}/{Path.GetFileName(assetPath)}", fileCollection, file.FetchAssets().Where(Selector));
+                fileCollection.Exporter.Export($"{ExportPath}/{Path.GetFileName(assetPath)}", fileCollection, file.FetchAssets().Where(Selector), options);
             }
         }
         public static void Export(string gameDir, string assetPath, string exportPath, Func<Object, bool> selector = null)
@@ -221,7 +230,7 @@ namespace Extract
                 Logger.Log(LogType.Info, LogCategory.Export, $"Exporting bundle {assetName}");
                 UpdateTitle($"Exporting {i++ / (float)fileCount * 100:0.#}% - {AssetPath}");
                 AssetPath = filePath;
-                fileCollection.Load(filePath);
+                //fileCollection.Load(filePath);
                 Util.FixShaderBundle(fileCollection);
                 var file = Util.FindFile(fileCollection, filePath);
                 var assets = file.FetchAssets().Where(Selector);
@@ -259,12 +268,12 @@ namespace Extract
                         }
                     }
                 } 
-                fileCollection.Exporter.Export($"{ExportPath}/{assetName}", fileCollection, assets);
-                Directory.CreateDirectory($"{ExportPath}/{assetName}"); //TODO: Fis
+                fileCollection.Exporter.Export($"{ExportPath}/{assetName}", fileCollection, assets, options);
+                Directory.CreateDirectory($"{ExportPath}/{assetName}"); //TODO: Fix
                 if(Directory.Exists($"{ExportPath}/{assetName}/Assets/Shader")) Directory.Delete($"{ExportPath}/{assetName}/Assets/Shader", true);
                 if(Directory.Exists($"{ExportPath}/{assetName}/Assets/Scripts"))  Directory.Delete($"{ExportPath}/{assetName}/Assets/Scripts", true);
                 File.Copy($"{filePath}.manifest", $"{ExportPath}/{assetName}/{Path.GetFileName(filePath)}.manifest", true);
-                fileCollection.UnloadAll();
+                //fileCollection.UnloadAll();
 
             }
         }

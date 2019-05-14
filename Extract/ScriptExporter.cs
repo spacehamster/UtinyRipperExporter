@@ -3,15 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using uTinyRipper;
 using uTinyRipper.Assembly;
+using uTinyRipper.AssetExporters;
 using uTinyRipper.Classes;
 using uTinyRipper.Exporters.Scripts;
 using uTinyRipper.SerializedFiles;
 using Object = uTinyRipper.Classes.Object;
+using Version = uTinyRipper.Version;
 
 namespace Extract
 {
@@ -20,11 +19,18 @@ namespace Extract
         string GameDir;
         FileCollection fileCollection;
         private string ExportPath;
+        ExportOptions options;
         HashSet<string> m_LoadedFiles = new HashSet<string>();
         public ScriptExporter(string gameDir, string exportPath)
         {
             GameDir = gameDir;
             ExportPath = exportPath;
+            options = new ExportOptions()
+            {
+                Version = new Version(2017, 3, 0, VersionType.Final, 3),
+                Platform = Platform.NoTarget,
+                Flags = TransferInstructionFlags.NoTransferInstructionFlags,
+            };
         }
         public static void ExportAll(string GameDir, string exportPath)
         {
@@ -73,7 +79,7 @@ namespace Extract
                     if (File.Exists($@"{GameDir}\{path}\{dep}"))
                     {
                         m_LoadedFiles.Add(dep);
-                        fileCollection.Load($@"{GameDir}\{path}\{dep}");
+                        //fileCollection.Load($@"{GameDir}\{path}\{dep}");
                         return;
                     }
                 }
@@ -110,13 +116,12 @@ namespace Extract
             fileCollection = new FileCollection(new FileCollection.Parameters()
             {
                 RequestAssemblyCallback = RequestAssembly,
-                RequestDependencyCallback = RequestDepency,
                 RequestResourceCallback = RequestResource
             });
             fileCollection.AssemblyManager.ScriptingBackEnd = ScriptingBackEnd.Mono;
             var assemblyManager = (AssemblyManager)fileCollection.AssemblyManager;
             fileCollection.AssemblyManager.Load(dllPath);
-            fileCollection.Exporter.Export(ExportPath, fileCollection, new Object[] { });
+            fileCollection.Exporter.Export(ExportPath, fileCollection, new Object[] { }, options);
             ScriptExportManager scriptManager = new ScriptExportManager(ExportPath);
             AssemblyDefinition myLibrary = AssemblyDefinition.ReadAssembly(dllPath);
             var refrences = myLibrary.MainModule.AssemblyReferences;
@@ -136,15 +141,14 @@ namespace Extract
             fileCollection = new FileCollection(new FileCollection.Parameters()
             {
                 RequestAssemblyCallback = RequestAssembly,
-                RequestDependencyCallback = RequestDepency,
                 RequestResourceCallback = RequestResource
             });
             fileCollection.AssemblyManager.ScriptingBackEnd = ScriptingBackEnd.Mono;
             var filePath = Path.Combine(GameDir, "globalgamemanagers.assets");
-            fileCollection.Load(filePath);
+            //fileCollection.Load(filePath);
             var gameAssets = fileCollection.Files.First(f => f is SerializedFile sf && sf.FilePath == filePath);
             var scripts = gameAssets.FetchAssets().Where(o => o is MonoScript ms).ToArray();
-            fileCollection.Exporter.Export(ExportPath, fileCollection, scripts);
+            fileCollection.Exporter.Export(ExportPath, fileCollection, scripts, options);
             ScriptFixer.FixScripts(ExportPath);
         }
         //Refer MonoManager, ScriptAssetExporter, ScriptExportManager
@@ -153,12 +157,11 @@ namespace Extract
             fileCollection = new FileCollection(new FileCollection.Parameters()
             {
                 RequestAssemblyCallback = RequestAssembly,
-                RequestDependencyCallback = RequestDepency,
                 RequestResourceCallback = RequestResource
             });
             fileCollection.AssemblyManager.ScriptingBackEnd = ScriptingBackEnd.Mono;
             var filePath = Path.Combine(GameDir, "globalgamemanagers.assets");
-            fileCollection.Load(filePath);
+            //fileCollection.Load(filePath);
             var gameAssets = fileCollection.Files.First(f => f is SerializedFile sf && sf.FilePath == filePath);
             var assets = gameAssets.FetchAssets().Where(o => o is MonoScript ms && selector(ms)).ToArray();
             ScriptExportManager scriptManager = new ScriptExportManager(ExportPath);
