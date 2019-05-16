@@ -1,17 +1,6 @@
 ﻿using CommandLine;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using uTinyRipper;
-using uTinyRipper.AssetExporters;
-using uTinyRipper.Classes;
-using uTinyRipper.SerializedFiles;
-using Object = uTinyRipper.Classes.Object;
-using Version = uTinyRipper.Version;
 namespace Extract
 {
     class Program
@@ -28,6 +17,8 @@ namespace Extract
             public bool GUIDByContent { get; set; }
             [Option('d', "exportdependencies", Default = true, Required = false, HelpText = "Export dependencies")]
             public bool ExportDependencies { get; set; }
+            [Option('s', "scripts", Default = false, Required = false, HelpText = "Export scripts")]
+            public bool ExportScripts { get; set; }
         }
         static void Main(string[] args)
         {
@@ -40,7 +31,10 @@ namespace Extract
                 {
                     Config.IsGenerateGUIDByContent = o.GUIDByContent;
                     Config.IsExportDependencies = o.ExportDependencies;
-                    if (o.File == null){
+                    if (o.ExportScripts)
+                    {
+                        ScriptExporter.ExportAll(o.GameDir, o.ExportDir);
+                    } else if (o.File == null){
                         GameStructureExporter.ExportGameStructure(o.GameDir, o.ExportDir);
                     } else if(o.File.EndsWith(".dll"))
                     {

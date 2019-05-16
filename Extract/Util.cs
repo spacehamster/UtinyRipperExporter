@@ -5,9 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using uTinyRipper;
 using uTinyRipper.Assembly;
 using uTinyRipper.Classes;
@@ -70,12 +68,14 @@ namespace Extract
         }
         public static void ReplaceInFile(string filePath, string source, string replacement)
         {
+            if (!File.Exists(filePath)) return;
             var text = File.ReadAllText(filePath);
             text = text.Replace(source, replacement);
             File.WriteAllText(filePath, text);
         }
-        internal static void InsertInFile(string filePath, int index, string replacement)
+        public static void InsertInFile(string filePath, int index, string replacement)
         {
+            if (!File.Exists(filePath)) return;
             var lines = File.ReadAllLines(filePath).ToList();
             lines.Insert(index, replacement);
             File.WriteAllLines(filePath, lines);
@@ -179,7 +179,7 @@ namespace Extract
             {
                 foreach (var asset in shaderBundle.FetchAssets())
                 {
-                    if (asset is uTinyRipper.Classes.Shader shader)
+                    if (asset is Shader shader)
                     {
                         var assetInfoField = typeof(uTinyRipper.Classes.Object).GetField("m_assetInfo", Util.AllBindingFlags);
                         var assetInfo = (AssetInfo)assetInfoField.GetValue(asset);
@@ -204,30 +204,20 @@ namespace Extract
             }
             return "";
         }
-        public static void LoadFile(FileCollection fileCollection, string filePath)
-        {
-            var path = Path.GetDirectoryName(filePath);
-            var name = Path.GetFileName(filePath);
-            FileScheme scheme = FileCollection.LoadScheme(path, name);
-            IFileCollection collection = fileCollection;
-            IAssemblyManager manager = fileCollection.AssemblyManager;
-            typeof(FileList).GetMethod("AddFile", Util.AllBindingFlags)
-                .Invoke(fileCollection, new object[] {scheme, collection, manager});
-        }
         public static void RandomizeAssetGuid(IEnumerable<uTinyRipper.Classes.Object> assets)
         {
             foreach (var asset in assets)
             {
                 var assetInfoField = typeof(uTinyRipper.Classes.Object).GetField("m_assetInfo", Util.AllBindingFlags);
                 var assetInfo = (AssetInfo)assetInfoField.GetValue(asset);
-                assetInfo.GUID = new uTinyRipper.Classes.EngineGUID(Guid.NewGuid());
+                assetInfo.GUID = new EngineGUID(Guid.NewGuid());
             }
         }
         public static void SetGUID(uTinyRipper.Classes.Object asset, Guid guid)
         {
             var assetInfoField = typeof(uTinyRipper.Classes.Object).GetField("m_assetInfo", Util.AllBindingFlags);
             var assetInfo = (AssetInfo)assetInfoField.GetValue(asset);
-            assetInfo.GUID = new uTinyRipper.Classes.EngineGUID(guid);
+            assetInfo.GUID = new EngineGUID(guid);
         }
     }
 }

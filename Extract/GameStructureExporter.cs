@@ -72,6 +72,7 @@ namespace Extract
         }
         private void Export()
         {
+            Util.PrepareExportDirectory(ExportPath);
             m_GameStructure.Export(ExportPath, (asset) => true);
         }
         static DateTime lastUpdate = DateTime.Now - TimeSpan.FromDays(1);
@@ -103,8 +104,6 @@ namespace Extract
             Util.PrepareExportDirectory(exportPath);
             var paths = assetPaths.ToList();
             paths.Add($"{gameDir}/Managed");
-            paths.Add($"{gameDir}/Resources/unity default resources");
-            paths.Add($"{gameDir}/Resources/unity_builtin_extra");
             var toExportHashSet = new HashSet<string>(assetPaths.Select(p => Util.NormalizePath(p)));
             if (loadBundleDependencies) {
                 var queue = new Queue<string>(paths);

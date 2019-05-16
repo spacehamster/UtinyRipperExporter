@@ -46,7 +46,7 @@ namespace Extract
             scriptExporter.DoExport(filter);
         }
        
-        static bool ScriptSelector(uTinyRipper.Classes.Object asset)
+        static bool ScriptSelector(Object asset)
         {
             if (asset is MonoScript) return true;
             return false;
@@ -58,7 +58,6 @@ namespace Extract
             {
                 Logger.Instance.Log(LogType.Warning, LogCategory.Debug, $"Can't find {asm}");
                 return;
-                //throw new Exception($"Can't find assembly {asm}");
             }
             fileCollection.LoadAssembly($@"{GameDir}\Managed\{asm}.dll");
         }
@@ -79,7 +78,6 @@ namespace Extract
                     if (File.Exists($@"{GameDir}\{path}\{dep}"))
                     {
                         m_LoadedFiles.Add(dep);
-                        //fileCollection.Load($@"{GameDir}\{path}\{dep}");
                         return;
                     }
                 }
@@ -127,49 +125,51 @@ namespace Extract
             var refrences = myLibrary.MainModule.AssemblyReferences;
             foreach (TypeDefinition type in myLibrary.MainModule.Types)
             {
+                //TODO: only export unity serializable classes
                 if (!type.IsClass || type.Name == "<Module>") continue;
                 var libName = myLibrary.Name.Name;
                 var @namespace = type.Namespace;
                 var className = type.Name;
-                var exportType = assemblyManager.CreateExportType(scriptManager, libName, @namespace, className);
+                var scriptID = assemblyManager.GetScriptID(libName, @namespace, className);
+                var exportType = assemblyManager.GetExportType(scriptManager, scriptID);
                 scriptManager.Export(exportType);
             }
         }
         void DoExportAll()
         {
-            Config.IsGenerateGUIDByContent = true;
-            fileCollection = new FileCollection(new FileCollection.Parameters()
+            Util.PrepareExportDirectory(ExportPath);
+            var managedPath = Path.Combine(GameDir, "Managed");
+            var globalgamemanagersPath = Path.Combine(GameDir, "globalgamemanagers.assets");
+            var gameStructure = GameStructure.Load(new string[]
             {
-                RequestAssemblyCallback = RequestAssembly,
-                RequestResourceCallback = RequestResource
+                globalgamemanagersPath,
+                managedPath
             });
+            fileCollection = gameStructure.FileCollection;
             fileCollection.AssemblyManager.ScriptingBackEnd = ScriptingBackEnd.Mono;
-            var filePath = Path.Combine(GameDir, "globalgamemanagers.assets");
-            //fileCollection.Load(filePath);
-            var gameAssets = fileCollection.Files.First(f => f is SerializedFile sf && sf.FilePath == filePath);
-            var scripts = gameAssets.FetchAssets().Where(o => o is MonoScript ms).ToArray();
+            var scripts = fileCollection.FetchAssets().Where(o => o is MonoScript ms).ToArray();
             fileCollection.Exporter.Export(ExportPath, fileCollection, scripts, options);
-            ScriptFixer.FixScripts(ExportPath);
+            //ScriptFixer.FixScripts(ExportPath);
         }
         //Refer MonoManager, ScriptAssetExporter, ScriptExportManager
         void DoExport(Func<MonoScript, bool> selector = null)
         {
-            fileCollection = new FileCollection(new FileCollection.Parameters()
+            var managedPath = Path.Combine(GameDir, "Managed");
+            var globalgamemanagersPath = Path.Combine(GameDir, "globalgamemanagers.assets");
+            var gameStructure = GameStructure.Load(new string[]
             {
-                RequestAssemblyCallback = RequestAssembly,
-                RequestResourceCallback = RequestResource
+                globalgamemanagersPath,
+                managedPath
             });
-            fileCollection.AssemblyManager.ScriptingBackEnd = ScriptingBackEnd.Mono;
-            var filePath = Path.Combine(GameDir, "globalgamemanagers.assets");
-            //fileCollection.Load(filePath);
-            var gameAssets = fileCollection.Files.First(f => f is SerializedFile sf && sf.FilePath == filePath);
-            var assets = gameAssets.FetchAssets().Where(o => o is MonoScript ms && selector(ms)).ToArray();
+            fileCollection = gameStructure.FileCollection;
+            if (selector == null) selector = (o) => true;
+            var assets = fileCollection.FetchAssets().Where(o => o is MonoScript ms && selector(ms)).ToArray();
             ScriptExportManager scriptManager = new ScriptExportManager(ExportPath);
             Dictionary<Object, ScriptExportType> exportTypes = new Dictionary<Object, ScriptExportType>();
             foreach (Object asset in assets)
             {
                 MonoScript script = (MonoScript)asset;
-                ScriptExportType exportType = script.CreateExportType(scriptManager);
+                ScriptExportType exportType = script.GetExportType(scriptManager);
                 exportTypes.Add(asset, exportType);
             }
             foreach (KeyValuePair<Object, ScriptExportType> exportType in exportTypes)
@@ -178,7 +178,6 @@ namespace Extract
             }
             //scriptManager.ExportRest();
             //ScriptFixer.FixScripts(ExportPath);
-
         }
     }
 }

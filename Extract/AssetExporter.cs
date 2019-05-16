@@ -100,6 +100,7 @@ namespace Extract
             };
             if (DependencyLookup.ContainsKey(dep))
             {
+                //TODO: Fix
                 //fileCollection.Load(DependencyLookup[dep]);
                 Logger.Log(LogType.Debug, LogCategory.Debug, $"Loading cached dependency {DependencyLookup[dep]}");
                 return;
@@ -107,6 +108,7 @@ namespace Extract
             //TODO: why is there spaces?
             if(dep == "unity builtin extra")
             {
+                //TODO: Fix
                 //fileCollection.Load($"{GameDir}\\Resources\\unity_builtin_extra");
                 Logger.Log(LogType.Debug, LogCategory.Debug, $"Loaded dependency unity builtin extra");
                 return;
@@ -118,6 +120,7 @@ namespace Extract
                 {
 
                     DependencyLookup[dep] = depPath;
+                    //TODO: Fix
                     //fileCollection.Load(depPath);
                     Logger.Log(LogType.Debug, LogCategory.Debug, $"Loaded dependency {depPath}");
                     return;
@@ -131,6 +134,7 @@ namespace Extract
                     if (SeenDependencies.Contains(manifestDependency)) continue;
                     SeenDependencies.Add(manifestDependency);
 
+                    //TODO: Fix
                     /*
                     using (var bundleFile = BundleFile.Load($"{GameDir}\\StreamingAssets\\Bundles\\{manifestDependency}"))
                     {
@@ -145,6 +149,7 @@ namespace Extract
                 }
                 if (DependencyLookup.ContainsKey(dep))
                 {
+                    //TODO: Fix
                     //fileCollection.Load(DependencyLookup[dep]);
                     Logger.Log(LogType.Debug, LogCategory.Debug, $"Loaded bundle {DependencyLookup[dep]}");
                     return;
@@ -172,12 +177,14 @@ namespace Extract
         }
         private void Export(string assetPath)
         {
+            //TODO: Fix
             //fileCollection.Load(AssetPath);
             var file = Util.FindFile(fileCollection, assetPath);
             fileCollection.Exporter.Export(ExportPath, fileCollection, file.FetchAssets().Where(Selector), options);
         }
         private void ExportMultiple(IEnumerable<string> assetPaths)
         {
+            //TODO: Fix
             //fileCollection.Load(assetPaths.ToList());
             foreach (var assetPath in assetPaths)
             {
@@ -230,6 +237,7 @@ namespace Extract
                 Logger.Log(LogType.Info, LogCategory.Export, $"Exporting bundle {assetName}");
                 UpdateTitle($"Exporting {i++ / (float)fileCount * 100:0.#}% - {AssetPath}");
                 AssetPath = filePath;
+                //TODO: Fix
                 //fileCollection.Load(filePath);
                 Util.FixShaderBundle(fileCollection);
                 var file = Util.FindFile(fileCollection, filePath);
