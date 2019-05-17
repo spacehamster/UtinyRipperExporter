@@ -19,6 +19,8 @@ namespace Extract
             public bool ExportDependencies { get; set; }
             [Option('s', "scripts", Default = false, Required = false, HelpText = "Export scripts")]
             public bool ExportScripts { get; set; }
+            [Option('i', "info", Default = false, Required = false, HelpText = "Export asset file info")]
+            public bool DumpInfo { get; set; }
         }
         static void Main(string[] args)
         {
@@ -34,12 +36,22 @@ namespace Extract
                     if (o.ExportScripts)
                     {
                         ScriptExporter.ExportAll(o.GameDir, o.ExportDir);
-                    } else if (o.File == null){
+                    }
+                    else if (o.DumpInfo)
+                    {
+                        DumpInfo.DumpAllFileInfoFast(o.GameDir, $"{o.ExportDir}_Fast");
+                        DumpInfo.DumpAllFileInfo(o.GameDir, $"{o.ExportDir}_full");
+
+                    }
+                    else if (o.File == null)
+                    {
                         GameStructureExporter.ExportGameStructure(o.GameDir, o.ExportDir);
-                    } else if(o.File.EndsWith(".dll"))
+                    }
+                    else if (o.File.EndsWith(".dll"))
                     {
                         ScriptExporter.ExportDLL(o.GameDir, o.File, o.ExportDir);
-                    } else
+                    }
+                    else
                     {
                         GameStructureExporter.ExportBundles(o.GameDir, new string[] { o.File }, o.ExportDir, true);
                     }

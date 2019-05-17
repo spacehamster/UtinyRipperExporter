@@ -69,6 +69,7 @@
     <Compile Include="DummyShaderExporter.cs" />
     <Compile Include="DummyShaderTextExporter.cs" />
     <Compile Include="ConsoleLogger.cs" />
+    <Compile Include="DumpInfo.cs" />
     <Compile Include="GameStructureExporter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
