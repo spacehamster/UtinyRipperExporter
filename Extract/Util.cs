@@ -56,6 +56,16 @@ namespace Extract
                 DeleteDir(dir);
             }
         }
+        public static string GetRelativePath(string filePath, string folder)
+        {
+            Uri pathUri = new Uri(filePath);
+            if (!folder.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                folder += Path.DirectorySeparatorChar;
+            }
+            Uri folderUri = new Uri(folder);
+            return Uri.UnescapeDataString(folderUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
+        }
         public static string NormalizePath(string path)
         {
             return Path.GetFullPath(new Uri(path).LocalPath)

@@ -39,8 +39,7 @@ namespace Extract
                     }
                     else if (o.DumpInfo)
                     {
-                        DumpInfo.DumpAllFileInfoFast(o.GameDir, $"{o.ExportDir}_Fast");
-                        DumpInfo.DumpAllFileInfo(o.GameDir, $"{o.ExportDir}_full");
+                        DumpInfo.DumpAllFileInfo(o.GameDir, $"{o.ExportDir}");
 
                     }
                     else if (o.File == null)
