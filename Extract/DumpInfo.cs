@@ -27,6 +27,15 @@ namespace Extract
                 WriteFileInfo(container, sw);
                 sw.WriteLine("");
                 DumpObjectInfo(container.FetchAssets(), sw);
+                if (container.Name == "globalgamemanagers")
+                {
+                    BuildSettings buildSettings = (BuildSettings)container.FetchAssets().FirstOrDefault(asset => asset is BuildSettings);
+                    if (buildSettings != null)
+                    {
+                        sw.WriteLine("");
+                        DumpBuildSettings(buildSettings, sw);
+                    }
+                }
             }
         }
         static void DumpFileListInfo(FileList fileList, string exportPath)
@@ -133,6 +142,47 @@ namespace Extract
                 sw.WriteLine($"      Dependency.AssetPath: {dep.AssetPath}");
                 sw.WriteLine($"      Dependency.FilePath: {dep.FilePath}");
                 sw.WriteLine($"      Dependency.FilePathOrigin: {dep.FilePathOrigin}");
+            }
+        }
+        public static string HashToString(Hash128 hash)
+        {
+            var data = BitConverter.GetBytes(hash.Data0)
+                .Concat(BitConverter.GetBytes(hash.Data1))
+                .Concat(BitConverter.GetBytes(hash.Data2))
+                .Concat(BitConverter.GetBytes(hash.Data3))
+                .ToArray();
+            return BitConverter.ToString(data).Replace("-", "");
+        }
+        public static void DumpBuildSettings(BuildSettings buildSettings, StreamWriter sw)
+        {
+            sw.WriteLine("BuildSettings");
+            sw.WriteLine($"  Version: {buildSettings.Version}");
+            sw.WriteLine("  Scenes");
+            for(int i = 0; i < buildSettings.Scenes.Count; i++)
+            {
+                var scene = buildSettings.Scenes[i];
+                sw.WriteLine($"    {i}: {scene}");
+            }
+            sw.WriteLine("  PreloadedPlugins");
+            for (int i = 0; i < buildSettings.PreloadedPlugins.Count; i++)
+            {
+                var preloadedPlugin = buildSettings.PreloadedPlugins[i];
+                sw.WriteLine($"    {i}: {preloadedPlugin}");
+            }
+            sw.WriteLine("  BuildTags");
+            for (int i = 0; i < buildSettings.BuildTags.Count; i++)
+            {
+                var buildTag = buildSettings.BuildTags[i];
+                sw.WriteLine($"    {i}: {buildTag}");
+            }
+            sw.WriteLine("  RuntimeClassHashes");
+            foreach(var kv in buildSettings.RuntimeClassHashes.OrderBy(kv => kv.Key)) {
+                sw.WriteLine($"    {kv.Key}: {HashToString(kv.Value)}");
+            }
+            sw.WriteLine("  ScriptHashes");
+            foreach (var kv in buildSettings.ScriptHashes)
+            {
+                sw.WriteLine($"    {HashToString(kv.Key)}: {HashToString(kv.Value)}");
             }
         }
         static void DumpFile(string filepath, string exportPath)
