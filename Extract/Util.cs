@@ -78,14 +78,14 @@ namespace Extract
         }
         public static void ReplaceInFile(string filePath, string source, string replacement)
         {
-            if (!File.Exists(filePath)) return;
+            //if (!File.Exists(filePath)) return;
             var text = File.ReadAllText(filePath);
             text = text.Replace(source, replacement);
             File.WriteAllText(filePath, text);
         }
         public static void InsertInFile(string filePath, int index, string replacement)
         {
-            if (!File.Exists(filePath)) return;
+            //if (!File.Exists(filePath)) return;
             var lines = File.ReadAllLines(filePath).ToList();
             lines.Insert(index, replacement);
             File.WriteAllLines(filePath, lines);
