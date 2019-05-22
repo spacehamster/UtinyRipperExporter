@@ -149,7 +149,6 @@ namespace Extract
             fileCollection.AssemblyManager.ScriptingBackEnd = ScriptingBackEnd.Mono;
             var scripts = fileCollection.FetchAssets().Where(o => o is MonoScript ms).ToArray();
             fileCollection.Exporter.Export(ExportPath, fileCollection, scripts, options);
-            //ScriptFixer.FixScripts(ExportPath);
         }
         //Refer MonoManager, ScriptAssetExporter, ScriptExportManager
         void DoExport(Func<MonoScript, bool> selector = null)
@@ -177,7 +176,6 @@ namespace Extract
                 string path = scriptManager.Export(exportType.Value);
             }
             //scriptManager.ExportRest();
-            //ScriptFixer.FixScripts(ExportPath);
         }
     }
 }

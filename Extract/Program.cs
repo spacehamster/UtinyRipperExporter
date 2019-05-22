@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using System.Diagnostics;
+using System.IO;
 using uTinyRipper;
 namespace Extract
 {
@@ -21,6 +22,8 @@ namespace Extract
             public bool ExportScripts { get; set; }
             [Option('i', "info", Default = false, Required = false, HelpText = "Export asset file info")]
             public bool DumpInfo { get; set; }
+            [Option('s', "fixscripts", Default = false, Required = false, HelpText = "Fix exported scripts")]
+            public bool FixScripts { get; set; }
         }
         static void Main(string[] args)
         {
@@ -53,6 +56,18 @@ namespace Extract
                     else
                     {
                         GameStructureExporter.ExportBundles(o.GameDir, new string[] { o.File }, o.ExportDir, true);
+                    }
+                    if (o.FixScripts)
+                    {
+                        var dirName = Path.GetFileName(o.GameDir);
+                        if(dirName == "Kingmaker_Data")
+                        {
+                            ScriptFixer.FixKingmakerScripts(o.ExportDir);
+                        }
+                        if(dirName == "PillarsOfEternityII_Data")
+                        {
+                            ScriptFixer.FixPoE2Scripts(o.ExportDir);
+                        }
                     }
                 });
             sw.Stop();
