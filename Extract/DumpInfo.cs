@@ -92,18 +92,19 @@ namespace Extract
         }
         static void DumpObjectInfo(IEnumerable<Object> objects, StreamWriter sw)
         {
-            sw.WriteLine("Name, ClassID, GUID, InstanceID, PathID, LocalIdentfierInFile, asset.IsValid");
+            sw.WriteLine("Name, ClassID, GUID, FileIndex, PathID, asset.IsValid");
             foreach (var asset in objects)
             {
                 var nameProp = asset.GetType().GetProperty("Name");
+                var pptr = asset.File.CreatePPtr(asset);
                 if (nameProp != null)
                 {
                     var name = nameProp.GetValue(asset);
-                    sw.WriteLine($"{name}, {asset.ClassID}, {asset.GUID}, {asset.InstanceID}, {asset.PathID}, {asset.LocalIdentfierInFile}, {asset.IsValid}");
+                    sw.WriteLine($"{name}, {asset.ClassID}, {asset.GUID}, {pptr.FileIndex}, {asset.PathID}, {asset.IsValid}");
                 }
                 else
                 {
-                    sw.WriteLine($"NamelessObject, {asset.ClassID}, {asset.GUID}, {asset.InstanceID}, {asset.PathID}, {asset.LocalIdentfierInFile}, {asset.IsValid}");
+                    sw.WriteLine($"NamelessObject, {asset.ClassID}, {asset.GUID}, {pptr.FileIndex}, {asset.PathID}, {asset.IsValid}");
                 }
             }
         }

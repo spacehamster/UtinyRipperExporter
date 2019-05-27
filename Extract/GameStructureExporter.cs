@@ -127,6 +127,7 @@ namespace Extract
                 }
             }
             var toExportList = toExportHashSet.ToList();
+            Console.WriteLine($"Exporting Files:\n{string.Join("\n", toExportList)}");
             new GameStructureExporter(gameDir, exportPath, toExportList).Export();
         }
     }
