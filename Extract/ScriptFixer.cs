@@ -103,9 +103,19 @@ namespace Extract
                 @"
         public override void Process() { }");
             Util.InsertInFile($"{firstpass}/UnityEngine/UI/Extensions/NicerOutline.cs",
-    13,
-    @"
+                13,
+                @"
         public override void ModifyMesh(VertexHelper vh) { }");
+            Util.InsertInFile($"{csharp}/InputModules/PS4InputModule.cs",
+                23,
+                @"
+        public override void Process() { }");
+            Util.InsertInFile($"{csharp}/UnityEngine/UI/KingmakerGraphicRaycaster.cs",
+    21,
+    @"
+        public override Camera eventCamera { get { return null; }}
+        public override void Raycast(PointerEventData eventData, System.Collections.Generic.List<RaycastResult> resultAppendList){ }");
+            Util.DeleteDirectory($"{csharp}/Kingmaker/EntitySystem/Persistence/JsonUtility");
         }
         public static void FixPoE2Scripts(string ExportPath)
         {

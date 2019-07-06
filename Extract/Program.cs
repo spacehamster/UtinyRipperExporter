@@ -6,56 +6,36 @@ namespace Extract
 {
     class Program
     {
-        public class Options
-        {
-            [Option('g', "gamedir", Required = true, HelpText = "Set the root directiory where unity assets are located.")]
-            public string GameDir { get; set; }
-            [Option('f', "file", Required = false, HelpText = "Set the file to extract")]
-            public string File { get; set; }
-            [Option('o', "output", Required = true, HelpText = "Set the directory to output files")]
-            public string ExportDir { get; set; }
-            [Option('c', "guidbycontent", Required = false, HelpText = "Generate guid by content")]
-            public bool GUIDByContent { get; set; }
-            [Option('d', "exportdependencies", Default = true, Required = false, HelpText = "Export dependencies")]
-            public bool ExportDependencies { get; set; }
-            [Option('s', "scripts", Default = false, Required = false, HelpText = "Export scripts")]
-            public bool ExportScripts { get; set; }
-            [Option('i', "info", Default = false, Required = false, HelpText = "Export asset file info")]
-            public bool DumpInfo { get; set; }
-            [Option('s', "fixscripts", Default = false, Required = false, HelpText = "Fix exported scripts")]
-            public bool FixScripts { get; set; }
-        }
         static void Main(string[] args)
         {
             Logger.Instance = new ConsoleLogger("log.txt");
             Config.IsAdvancedLog = true;
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            Parser.Default.ParseArguments<Options>(args)
-                .WithParsed<Options>(o =>
+            Parser.Default.ParseArguments<ExportSettings>(args)
+                .WithParsed<ExportSettings>(o =>
                 {
                     Config.IsGenerateGUIDByContent = o.GUIDByContent;
                     Config.IsExportDependencies = o.ExportDependencies;
                     if (o.ExportScripts)
                     {
-                        ScriptExporter.ExportAll(o.GameDir, o.ExportDir);
+                        ScriptExporter.ExportAll(o.GameDir, o.ExportDir, o.ScriptByName);
                     }
                     else if (o.DumpInfo)
                     {
-                        DumpInfo.DumpAllFileInfo(o.GameDir, $"{o.ExportDir}");
-
+                        DumpInfo.DumpAllFileInfo(o.GameDir, o.ExportDir);
                     }
                     else if (o.File == null)
                     {
-                        GameStructureExporter.ExportGameStructure(o.GameDir, o.ExportDir);
+                        GameStructureExporter.ExportGameStructure(o);
                     }
                     else if (o.File.EndsWith(".dll"))
                     {
-                        ScriptExporter.ExportDLL(o.GameDir, o.File, o.ExportDir);
+                        ScriptExporter.ExportDLL(o.GameDir, o.File, o.ExportDir, o.ScriptByName);
                     }
                     else
                     {
-                        GameStructureExporter.ExportBundles(o.GameDir, new string[] { o.File }, o.ExportDir, true);
+                        GameStructureExporter.ExportBundles(o, new string[] { o.File }, true);
                     }
                     if (o.FixScripts)
                     {

@@ -10,10 +10,11 @@ using uTinyRipper;
 using uTinyRipper.Assembly;
 using uTinyRipper.Classes;
 using uTinyRipper.SerializedFiles;
+using YamlDotNet.RepresentationModel;
 
 namespace Extract
 {
-    class Util
+    public class Util
     {
         public static BindingFlags AllBindingFlags = BindingFlags.Instance
             | BindingFlags.Static
@@ -90,30 +91,19 @@ namespace Extract
             lines.Insert(index, replacement);
             File.WriteAllLines(filePath, lines);
         }
-        internal static List<string> GetManifestDependencies(string filePath)
+        public static List<string> GetManifestDependencies(string filePath)
         {
-            var lines = File.ReadAllLines(filePath).ToList();
-            bool isAtDependencies = false;
-            var results = new List<string>();
-            foreach (var line in lines)
+            var yaml = new YamlStream();
+            YamlMappingNode mapping = null;
+            using (var fs = File.OpenText(filePath))
             {
-                if (isAtDependencies)
-                {
-                    if (line.StartsWith("- "))
-                    {
-                        var dep = line.Replace("- ", "");
-                        results.Add(Path.GetFileName(dep));
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                else
-                {
-                    if (line.StartsWith("Dependencies:")) isAtDependencies = true;
-                }
+                yaml.Load(fs);
+                mapping = (YamlMappingNode)yaml.Documents[0].RootNode;
             }
+            var dependencies = (YamlSequenceNode)mapping.Children[new YamlScalarNode("Dependencies")];
+            var results = dependencies
+                .Select(node => Path.GetFileName(((YamlScalarNode)node).Value))
+                .ToList();
             return results;
         }
         internal static List<string> GetManifestAssets(string filePath)
