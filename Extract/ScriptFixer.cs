@@ -116,6 +116,7 @@ namespace Extract
         public override Camera eventCamera { get { return null; }}
         public override void Raycast(PointerEventData eventData, System.Collections.Generic.List<RaycastResult> resultAppendList){ }");
             Util.DeleteDirectory($"{csharp}/Kingmaker/EntitySystem/Persistence/JsonUtility");
+            Util.DeleteDirectory($"{ExportPath}/Assets/Scripts/Newtonsoft.Json");
         }
         public static void FixPoE2Scripts(string ExportPath)
         {

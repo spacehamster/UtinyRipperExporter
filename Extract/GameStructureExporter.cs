@@ -7,6 +7,7 @@ using System.Text;
 using uTinyRipper;
 using uTinyRipper.AssetExporters;
 using uTinyRipper.Classes;
+using uTinyRipper.SerializedFiles;
 using uTinyRipperGUI.Exporters;
 using DateTime = System.DateTime;
 using Version = uTinyRipper.Version;
@@ -107,7 +108,9 @@ namespace Extract
                         {
                             var data = md5.ComputeHash(Encoding.UTF8.GetBytes($"{shader.ValidName}"));
                             var newGuid = new Guid(data);
+                            var engGuid = new EngineGUID(newGuid);
                             Util.SetGUID(shader, newGuid);
+                            Console.WriteLine($"Set shader {shader.ValidName} to Guid {engGuid}");
                         }
                     }
                 }
@@ -117,6 +120,17 @@ namespace Extract
         {
             Util.PrepareExportDirectory(ExportPath);
             m_GameStructure.Export(ExportPath, Filter);
+        }
+        private void ExportBundles(IEnumerable<string> requestedPaths)
+        {
+            Util.PrepareExportDirectory(ExportPath);
+            var requestedFiles = new HashSet<ISerializedFile>();
+            foreach (var path in requestedPaths)
+            {
+                var file = Util.FindFile(m_GameStructure.FileCollection, path);
+                requestedFiles.Add(file);
+            }
+            m_GameStructure.Export(ExportPath, (obj) => requestedFiles.Contains(obj.File) && Filter(obj));
         }
         static DateTime lastUpdate = DateTime.Now - TimeSpan.FromDays(1);
         public static void UpdateTitle(string text, params string[] arguments)
@@ -181,7 +195,7 @@ namespace Extract
             }
             toExportList.Add($"{gameDir}/Managed");
             Console.WriteLine($"Exporting Files:\n{string.Join("\n", toExportList)}");
-            new GameStructureExporter(settings, toExportList, filter).Export();
+            new GameStructureExporter(settings, toExportList, filter).ExportBundles(assetPaths);
         }
     }
 }
