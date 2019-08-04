@@ -1,3 +1,6 @@
 [submodule "UtinyRipper"]
 	path = UtinyRipper
 	url = https://github.com/mafaca/UtinyRipper.git
+[submodule "HLSLcc/HLSLcc"]
+	path = HLSLcc/HLSLcc
+	url = https://github.com/RuslanKutdusov/HLSLcc.git

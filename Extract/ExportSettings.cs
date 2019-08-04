@@ -7,8 +7,26 @@ using System.Threading.Tasks;
 
 namespace Extract
 {
+    public enum ShaderExportMode
+    {
+        Dummy,
+        Asm,
+        GLSL,
+        Metal
+    }
     public class ExportSettings
     {
+        public ExportSettings()
+        {
+            foreach(var prop in this.GetType().GetProperties())
+            {
+                var attr = Attribute.GetCustomAttribute(prop, typeof(OptionAttribute)) as OptionAttribute;
+                if(attr != null)
+                {
+                    prop.SetValue(this, attr.Default);
+                }
+            }
+        }
         [Option('g', "gamedir", Required = true, HelpText = "Set the root directiory where unity assets are located.")]
         public string GameDir { get; set; }
         [Option('f', "file", Required = false, HelpText = "Set the file to extract")]
@@ -31,5 +49,9 @@ namespace Extract
         public bool ShaderByName { get; set; }
         [Option("organizescriptableobjects", Default = true, Required = false, HelpText = "Export scriptable objects in seperate folders by type")]
         public bool OrganizeScriptableObjects { get; set; }
+        [Option("shadermode", Default = ShaderExportMode.Dummy, Required = false, HelpText = "Shader export mode")]
+        public ShaderExportMode ShaderExportMode { get; set; }
+        [Option("condenseshadersubprograms", Default = false, Required = false, HelpText = "Condense the number of shader subprograms that are exported")]
+        public bool CondenseShaderSubprograms { get; set; }
     }
 }

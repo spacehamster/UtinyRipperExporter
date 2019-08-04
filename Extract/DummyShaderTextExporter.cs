@@ -66,21 +66,9 @@ namespace Extract
                     writer.Write('}');
                 }
             }
-            else if (true)
-            {
-                throw new NotImplementedException();
-            }
-            else if (Shader.IsEncoded(container.Version))
-            {
-                using (ShaderWriter writer = new ShaderWriter(stream, shader, exporterInstantiator))
-                {
-                    string header = Encoding.UTF8.GetString(shader.Script);
-                    shader.SubProgramBlob.Export(writer, header);
-                }
-            }
             else
             {
-                shader.ExportBinary(container, stream);
+                throw new NotImplementedException();
             }
         }
     }

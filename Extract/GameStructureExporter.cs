@@ -46,7 +46,7 @@ namespace Extract
             var engineExporter = new EngineAssetExporter();
             fileCollection.Exporter.OverrideExporter(ClassIDType.Material, engineExporter);
             fileCollection.Exporter.OverrideExporter(ClassIDType.Mesh, engineExporter);
-            fileCollection.Exporter.OverrideExporter(ClassIDType.Shader, new DummyShaderExporter());
+            fileCollection.Exporter.OverrideExporter(ClassIDType.Shader, new CustomShaderAssetExporter());
             fileCollection.Exporter.OverrideExporter(ClassIDType.TextAsset, new TextAssetExporter());
             fileCollection.Exporter.OverrideExporter(ClassIDType.AudioClip, new AudioAssetExporter());
             fileCollection.Exporter.OverrideExporter(ClassIDType.Font, new FontAssetExporter());
