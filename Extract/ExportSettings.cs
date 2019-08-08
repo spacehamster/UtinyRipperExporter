@@ -12,7 +12,8 @@ namespace Extract
         Dummy,
         Asm,
         GLSL,
-        Metal
+        Metal,
+        Default
     }
     public class ExportSettings
     {

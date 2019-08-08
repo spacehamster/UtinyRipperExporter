@@ -186,7 +186,7 @@ namespace Extract
                         using (MD5 md5 = MD5.Create())
                         {
                             byte[] md5Hash = md5.ComputeHash(Encoding.ASCII.GetBytes(shader.ValidName));
-                            assetInfo.GUID = new uTinyRipper.Classes.EngineGUID(md5Hash);
+                            assetInfo.GUID = new EngineGUID(md5Hash);
                         }
                     }
                 }

@@ -50,6 +50,9 @@ namespace Extract
                 } else if(settings.ShaderExportMode == ShaderExportMode.Asm)
                 {
                     shader.ExportBinary(container, fileStream, DXShaderExporterInstantiator);
+                } else
+                {
+                    shader.ExportBinary(container, fileStream, DefaultShaderExporterInstantiator);
                 }
                 
             }
@@ -94,11 +97,6 @@ namespace Extract
         {
             switch (graphicApi)
             {
-                case GPUPlatform.openGL:
-                case GPUPlatform.gles:
-                case GPUPlatform.gles3:
-                case GPUPlatform.glcore:
-                    return new ShaderGLESExporter();
                 case GPUPlatform.vulkan:
                     return new ShaderVulkanExporter();
                 default:
@@ -109,11 +107,6 @@ namespace Extract
         {
             switch (graphicApi)
             {
-                case GPUPlatform.openGL:
-                case GPUPlatform.gles:
-                case GPUPlatform.gles3:
-                case GPUPlatform.glcore:
-                    return new ShaderGLESExporter();
                 case GPUPlatform.d3d9:
                 case GPUPlatform.d3d11_9x:
                 case GPUPlatform.d3d11:

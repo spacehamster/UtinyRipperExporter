@@ -241,6 +241,48 @@ namespace Extract
         //Refer ShaderSubProgram.Export
         void ExportShaderSubProgram(ShaderSubProgram subProgram, ShaderWriter writer, ShaderType type, bool isBest)
         {
+            if (subProgram.GlobalKeywords.Count > 0)
+            {
+                writer.Write("Keywords { ");
+                foreach (string keyword in subProgram.GlobalKeywords)
+                {
+                    writer.Write("\"{0}\" ", keyword);
+                }
+                if (IsReadLocalKeywords(writer.Version))
+                {
+                    foreach (string keyword in subProgram.LocalKeywords)
+                    {
+                        writer.Write("\"{0}\" ", keyword);
+                    }
+                }
+                writer.Write("}\n");
+                writer.WriteIndent(5);
+            }
+
+            writer.Write("\"!!{0}", subProgram.ProgramType.ToShaderName(writer.Platform, type));
+            if (subProgram.ProgramData.Count > 0)
+            {
+                writer.Write("\n");
+                writer.WriteIndent(5);
+                switch (subProgram.ProgramType.ToGPUPlatform(writer.Platform))
+                {
+                    case GPUPlatform.d3d11:
+                    case GPUPlatform.d3d11_9x:
+                    case GPUPlatform.d3d9:
+                        ExportGLSL(subProgram, writer, type, isBest);
+                        break;
+                    default:
+                        writer.WriteShaderData(
+                            subProgram.ProgramType.ToGPUPlatform(writer.Platform),
+                            subProgram.ProgramData.ToArray());
+                        break;
+                }
+                
+            }
+            writer.Write('"');
+        }
+        void ExportGLSL(ShaderSubProgram subProgram, ShaderWriter writer, ShaderType type, bool isBest)
+        {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
