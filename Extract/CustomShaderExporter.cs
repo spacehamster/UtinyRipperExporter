@@ -1,8 +1,10 @@
-﻿using System;
+﻿using HLSLccCLR;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
 using uTinyRipper;
@@ -10,6 +12,7 @@ using uTinyRipper.AssetExporters;
 using uTinyRipper.Classes;
 using uTinyRipper.Classes.Shaders;
 using uTinyRipper.Classes.Shaders.Exporters;
+using Shader = uTinyRipper.Classes.Shader;
 using Version = uTinyRipper.Version;
 
 namespace Extract
@@ -281,6 +284,7 @@ namespace Extract
             }
             writer.Write('"');
         }
+        [HandleProcessCorruptedStateExceptions]
         void ExportGLSL(ShaderSubProgram subProgram, ShaderWriter writer, ShaderType type, bool isBest)
         {
             Stopwatch stopWatch = new Stopwatch();
@@ -322,9 +326,33 @@ namespace Extract
             keyWordScore += subProgram.LocalKeywords == null ? 0 : subProgram.LocalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
             writer.WriteLine($"// KeywordScore {keyWordScore}");
             writer.WriteLine($"// Best {isBest}");
+
             if (!File.Exists(glslPath))
             {
-                Process process = new Process();
+                try
+                {
+                    var ext = new CLRGlExtensions();
+                    ext.ARB_explicit_attrib_location = 1;
+                    ext.ARB_explicit_uniform_location = 1;
+                    ext.ARB_shading_language_420pack = 0;
+                    ext.OVR_multiview = 0;
+                    ext.EXT_shader_framebuffer_fetch = 0;
+                    var shader = HLSLccWrapper.TranslateFromMem(data,
+                        CLRGLLang.LANG_DEFAULT, ext);
+                    if (shader.OK != 0)
+                    {
+                        File.WriteAllText(glslPath, shader.Text);
+                    } else
+                    {
+                        writer.WriteLine($"//Error with {hash}");
+                    }
+                } catch(AccessViolationException ex)
+                {
+                    writer.WriteLine($"//Error with {hash}");
+                    writer.WriteLine($"//{ex.ToString()}");
+                }
+                Logger.Log(LogType.Debug, LogCategory.Export, $"Cross Compiled HLSL {stopWatch.ElapsedMilliseconds} ms");
+                /*Process process = new Process();
                 process.StartInfo.FileName = "HLSLcc.exe";
                 process.StartInfo.Arguments = $"-in={objPath} -out={glslPath}";
                 process.StartInfo.UseShellExecute = false;
@@ -344,7 +372,7 @@ namespace Extract
                     writer.WriteLine($"//Error with {hash}");
                     writer.WriteLine($"//Output: {output}");
                     writer.WriteLine($"//Error: {err}");
-                }
+                }*/
             }
             stopWatch.Stop();
             //File.Delete(objPath);

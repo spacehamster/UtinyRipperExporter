@@ -188,6 +188,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\HLSLccWrapper\HLSLccWrapper.vcxproj">
+      <Project>{b812e249-4f57-4c35-b5a8-a8ec498627f9}</Project>
+      <Name>HLSLccWrapper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\uTinyRipperUtility\uTinyRipperUtility.csproj">
       <Project>{6e5eec59-3ea9-4aca-bfa5-ddd9b497cac8}</Project>
       <Name>uTinyRipperUtility</Name>
