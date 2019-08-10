@@ -393,14 +393,10 @@ namespace Extract
                     throw new Exception($"Unexpected program type {prgramType}");
             }
         }
-        static List<ConstantBuffer> GetConstantBuffers(ShaderSubProgram shaderSubprogram)
-        {
-            return shaderSubprogram.ConstantBuffers.ToList();
-        }
 
         static uint GetResourceBindingCount(ShaderSubProgram shaderSubprogram)
         {
-            var constantBuffers = GetConstantBuffers(shaderSubprogram);
+            var constantBuffers = shaderSubprogram.ConstantBuffers;
             return (uint)constantBuffers.Count + (uint)shaderSubprogram.TextureParameters.Count * 2 + (uint)shaderSubprogram.BufferParameters.Count;
         }
         /* ResourceBindingFormat
@@ -419,7 +415,6 @@ namespace Extract
             var memoryStream = new MemoryStream();
             using (var writer = new EndianWriter(memoryStream))
             {
-                var constantBuffers = GetConstantBuffers(shaderSubprogram);
                 var bindingCount = GetResourceBindingCount(shaderSubprogram);
                 const uint bindingHeaderSize = 32;
                 uint nameOffset = resourceOffset + bindingHeaderSize * (uint)bindingCount;
@@ -434,7 +429,7 @@ namespace Extract
                     nameLookup[textureParam.Name] = nameOffset;
                     nameOffset += (uint)textureParam.Name.Length + 1;
                 }
-                foreach (var constantBuffer in constantBuffers)
+                foreach (var constantBuffer in shaderSubprogram.ConstantBufferBindings)
                 {
                     nameLookup[constantBuffer.Name] = nameOffset;
                     nameOffset += (uint)constantBuffer.Name.Length + 1;
@@ -455,7 +450,7 @@ namespace Extract
                     //Number of samples
                     writer.Write((uint)56); //TODO: Check this
                     //Bind point
-                    writer.Write(bindPoint);
+                    writer.Write((uint)bufferParam.Index);
                     bindPoint += 1;
                     //Bind count
                     writer.Write((uint)1);
@@ -477,7 +472,7 @@ namespace Extract
                     //Number of samples
                     writer.Write((uint)0);
                     //Bind point
-                    writer.Write(bindPoint);
+                    writer.Write((uint)textureParam.Index);
                     bindPoint += 1;
                     //Bind count
                     writer.Write((uint)1);
@@ -501,7 +496,7 @@ namespace Extract
                     //Number of samples
                     writer.Write(uint.MaxValue);
                     //Bind point
-                    writer.Write(bindPoint);
+                    writer.Write((uint)textureParam.Index);
                     bindPoint += 1;
                     //Bind count
                     writer.Write((uint)1);
@@ -509,7 +504,7 @@ namespace Extract
                     writer.Write((uint)ShaderInputFlags.None);
                 }
                 bindPoint = 0;
-                foreach (var constantBuffer in constantBuffers)
+                foreach (var constantBuffer in shaderSubprogram.ConstantBufferBindings)
                 {
                     //Resource bindings
                     //nameOffset
@@ -523,7 +518,7 @@ namespace Extract
                     //Number of samples
                     writer.Write((uint)0);
                     //Bind point
-                    writer.Write(bindPoint);
+                    writer.Write((uint)constantBuffer.Index);
                     bindPoint += 1;
                     //Bind count
                     writer.Write((uint)1);
@@ -534,7 +529,7 @@ namespace Extract
                 {
                     writer.WriteStringZeroTerm(textureParam.Name);
                 }
-                foreach (var constantBuffer in constantBuffers)
+                foreach (var constantBuffer in shaderSubprogram.ConstantBufferBindings)
                 {
                     writer.WriteStringZeroTerm(constantBuffer.Name);
                 }
@@ -719,12 +714,11 @@ namespace Extract
             var memoryStream = new MemoryStream();
             using (var writer = new EndianWriter(memoryStream))
             {
-                var constantBuffers = GetConstantBuffers(shaderSubprogram);
-                uint headerSize = (uint)constantBuffers.Count * 24;
+                uint headerSize = (uint)shaderSubprogram.ConstantBuffers.Count * 24;
                 uint variableOffset = contantBufferOffset + headerSize;
                 List<byte[]> VariableDataList = new List<byte[]>();
                 int constantBufferIndex = 0;
-                foreach (var constantBuffer in constantBuffers)
+                foreach (var constantBuffer in shaderSubprogram.ConstantBuffers)
                 {
                     var variables = BuildVariables(constantBuffer, constantBufferIndex++, shaderSubprogram.ProgramType);
                     uint nameOffset = NameLookup[constantBuffer.Name];

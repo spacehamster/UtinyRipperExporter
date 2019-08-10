@@ -272,7 +272,7 @@ namespace Extract
                     case GPUPlatform.d3d11:
                     case GPUPlatform.d3d11_9x:
                     case GPUPlatform.d3d9:
-                        ExportGLSL(subProgram, writer, type, isBest);
+                        ExportDebug(subProgram, writer, type, isBest);
                         break;
                     default:
                         writer.WriteShaderData(
@@ -280,12 +280,17 @@ namespace Extract
                             subProgram.ProgramData.ToArray());
                         break;
                 }
-                
+
             }
             writer.Write('"');
         }
         [HandleProcessCorruptedStateExceptions]
         void ExportGLSL(ShaderSubProgram subProgram, ShaderWriter writer, ShaderType type, bool isBest)
+        {
+
+        }
+        [HandleProcessCorruptedStateExceptions]
+        void ExportDebug(ShaderSubProgram subProgram, ShaderWriter writer, ShaderType type, bool isBest)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -302,19 +307,8 @@ namespace Extract
             var dxExporter = new uTinyRipperGUI.Exporters.ShaderDXExporter(
                 writer.Shader.File.Version, subProgram.ProgramType.ToGPUPlatform(writer.Platform));
             string asmPath = $"{folder}/{hash}.dxasm";
-            if (!File.Exists(asmPath))
-            {
-                using (var sw = new StreamWriter($@"{folder}\{hash}.dxasm"))
-                {
-                    dxExporter.Export(subProgram.ProgramData.ToArray(), sw);
-                }
-                Logger.Log(LogType.Debug, LogCategory.Export, $"Exported asm {stopWatch.ElapsedMilliseconds} ms");
-                stopWatch.Restart();
-            }
-
             string objPath = $"{folder}/{hash}.o";
             string glslPath = $"{folder}/{hash}.glsl";
-            File.WriteAllBytes(objPath, data);
             writer.WriteLine($"// {hash}.glsl");
             writer.WriteLine($"// Objfile Length {data.Length}");
             var variableCount = subProgram.ConstantBuffers
@@ -341,38 +335,34 @@ namespace Extract
                         CLRGLLang.LANG_DEFAULT, ext);
                     if (shader.OK != 0)
                     {
-                        File.WriteAllText(glslPath, shader.Text);
-                    } else
-                    {
-                        writer.WriteLine($"//Error with {hash}");
+                        File.WriteAllText(glslPath, "OK");
                     }
-                } catch(AccessViolationException ex)
+                    else
+                    {
+                        File.WriteAllText(glslPath, $"FailCode {shader.OK}");
+                        writer.WriteLine($"//Error with {hash}");
+                        writer.WriteLine($"FailCode {shader.OK}");
+                    }
+                    Logger.Log(LogType.Debug, LogCategory.Export, $"Cross Compiled HLSL {stopWatch.ElapsedMilliseconds} ms");
+                    stopWatch.Restart();
+                }
+                catch (Exception ex)
                 {
+                    Logger.Log(LogType.Debug, LogCategory.Export, $"Cross Compiled HLSL {stopWatch.ElapsedMilliseconds} ms");
+                    stopWatch.Restart();
                     writer.WriteLine($"//Error with {hash}");
                     writer.WriteLine($"//{ex.ToString()}");
-                }
-                Logger.Log(LogType.Debug, LogCategory.Export, $"Cross Compiled HLSL {stopWatch.ElapsedMilliseconds} ms");
-                /*Process process = new Process();
-                process.StartInfo.FileName = "HLSLcc.exe";
-                process.StartInfo.Arguments = $"-in={objPath} -out={glslPath}";
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                var result = process.Start();
-                //* Read the output (or the error)
-                string output = process.StandardOutput.ReadToEnd();
-                Console.WriteLine(output);
-                string err = process.StandardError.ReadToEnd();
-                Console.WriteLine(err);
-                process.WaitForExit();
+                    File.WriteAllBytes(objPath, data);
+                    File.WriteAllText(glslPath, "Exception");
 
-                Logger.Log(LogType.Debug, LogCategory.Export, $"Cross Compiled HLSL {stopWatch.ElapsedMilliseconds} ms");
-                if (process.ExitCode != 0)
-                {
-                    writer.WriteLine($"//Error with {hash}");
-                    writer.WriteLine($"//Output: {output}");
-                    writer.WriteLine($"//Error: {err}");
-                }*/
+                    using (var sw = new StreamWriter(asmPath))
+                    {
+                        dxExporter.Export(subProgram.ProgramData.ToArray(), sw);
+                    }
+                    Logger.Log(LogType.Debug, LogCategory.Export, $"Exported asm {stopWatch.ElapsedMilliseconds} ms");
+                    stopWatch.Restart();
+                }
+                
             }
             stopWatch.Stop();
             //File.Delete(objPath);
