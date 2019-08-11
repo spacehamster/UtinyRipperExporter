@@ -272,7 +272,7 @@ namespace Extract
                     case GPUPlatform.d3d11:
                     case GPUPlatform.d3d11_9x:
                     case GPUPlatform.d3d9:
-                        ExportDebug(subProgram, writer, type, isBest);
+                        ExportGLSL(subProgram, writer, type, isBest);
                         break;
                     default:
                         writer.WriteShaderData(
@@ -287,11 +287,6 @@ namespace Extract
         [HandleProcessCorruptedStateExceptions]
         void ExportGLSL(ShaderSubProgram subProgram, ShaderWriter writer, ShaderType type, bool isBest)
         {
-
-        }
-        [HandleProcessCorruptedStateExceptions]
-        void ExportDebug(ShaderSubProgram subProgram, ShaderWriter writer, ShaderType type, bool isBest)
-        {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
@@ -304,10 +299,6 @@ namespace Extract
             var filesteam = writer.BaseStream as FileStream;
             var folder = Path.GetDirectoryName(filesteam.Name);
 
-            var dxExporter = new uTinyRipperGUI.Exporters.ShaderDXExporter(
-                writer.Shader.File.Version, subProgram.ProgramType.ToGPUPlatform(writer.Platform));
-            string asmPath = $"{folder}/{hash}.dxasm";
-            string objPath = $"{folder}/{hash}.o";
             string glslPath = $"{folder}/{hash}.glsl";
             writer.WriteLine($"// {hash}.glsl");
             writer.WriteLine($"// Objfile Length {data.Length}");
@@ -335,7 +326,7 @@ namespace Extract
                         CLRGLLang.LANG_DEFAULT, ext);
                     if (shader.OK != 0)
                     {
-                        File.WriteAllText(glslPath, "OK");
+                        File.WriteAllText(glslPath, shader.Text);
                     }
                     else
                     {
@@ -352,20 +343,13 @@ namespace Extract
                     stopWatch.Restart();
                     writer.WriteLine($"//Error with {hash}");
                     writer.WriteLine($"//{ex.ToString()}");
-                    File.WriteAllBytes(objPath, data);
                     File.WriteAllText(glslPath, "Exception");
-
-                    using (var sw = new StreamWriter(asmPath))
-                    {
-                        dxExporter.Export(subProgram.ProgramData.ToArray(), sw);
-                    }
                     Logger.Log(LogType.Debug, LogCategory.Export, $"Exported asm {stopWatch.ElapsedMilliseconds} ms");
                     stopWatch.Restart();
                 }
                 
             }
             stopWatch.Stop();
-            //File.Delete(objPath);
         }
     }
 }
