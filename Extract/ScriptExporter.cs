@@ -16,7 +16,7 @@ using Version = uTinyRipper.Version;
 
 namespace Extract
 {
-    class ScriptExporter
+    public class ScriptExporter
     {
         string GameDir;
         FileCollection fileCollection;
