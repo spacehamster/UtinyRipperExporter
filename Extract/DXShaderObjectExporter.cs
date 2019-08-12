@@ -490,9 +490,7 @@ namespace Extract
                     //Resource return type
                     writer.Write((uint)ResourceReturnType.NotApplicable);
                     //Resource view dimension
-                    //TODO: look into this
-                    var viewDimension = textureParam.Dim == 5 ? ShaderResourceViewDimension.Texture2DArray : ShaderResourceViewDimension.Unknown;
-                    writer.Write((uint)viewDimension);
+                    writer.Write((uint)textureParam.Dim);
                     //Number of samples
                     writer.Write(uint.MaxValue);
                     //Bind point
