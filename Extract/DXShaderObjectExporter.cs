@@ -523,6 +523,10 @@ namespace Extract
                     //Shader input flags
                     writer.Write((uint)ShaderInputFlags.None);
                 }
+                foreach (var bufferParam in shaderSubprogram.BufferParameters)
+                {
+                    writer.WriteStringZeroTerm(bufferParam.Name);
+                }
                 foreach (var textureParam in shaderSubprogram.TextureParameters)
                 {
                     writer.WriteStringZeroTerm(textureParam.Name);

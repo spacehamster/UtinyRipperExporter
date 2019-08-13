@@ -294,7 +294,7 @@ namespace Extract
 
             Logger.Log(LogType.Debug, LogCategory.Export, $"Exporting Subprogram {hash}");
 
-            var data = DXShaderObjectExporter.GetObjectData(writer.Version, subProgram.ProgramType.ToGPUPlatform(writer.Platform), subProgram);
+            var data = DXShaderExporter.DXShaderObjectExporter.GetObjectData(writer.Version, subProgram.ProgramType.ToGPUPlatform(writer.Platform), subProgram);
 
             var filesteam = writer.BaseStream as FileStream;
             var folder = Path.GetDirectoryName(filesteam.Name);
