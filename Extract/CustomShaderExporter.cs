@@ -171,7 +171,9 @@ namespace Extract
 				writer.Write("Program \"{0}\" {{\n", type.ToProgramTypeString());
 				HashSet<ShaderGpuProgramType> isTierLookup = GetIsTierLookup(serializedProgram.SubPrograms);
 				var subprograms = serializedProgram.SubPrograms;
-				var best = serializedProgram.SubPrograms
+				if (FilterSubPrograms)
+				{
+					var best = serializedProgram.SubPrograms
 					.OrderByDescending(subProgram =>
 					{
 						GPUPlatform platform = subProgram.GpuProgramType.ToGPUPlatform(writer.Platform);
@@ -179,10 +181,8 @@ namespace Extract
 						ShaderSubProgramBlob blob = writer.Shader.SubProgramBlobs[index];
 						var sp = blob.SubPrograms[(int)subProgram.BlobIndex];
 						return sp.ProgramData.Count;
-						//return sp.GlobalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
+										//return sp.GlobalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
 					}).FirstOrDefault();
-				if (FilterSubPrograms)
-				{
 					subprograms = new SerializedSubProgram[] { best };
 				}
 				foreach (SerializedSubProgram subProgram in subprograms)
@@ -192,14 +192,14 @@ namespace Extract
 					int index = writer.Shader.Platforms.IndexOf(platform);
 					ShaderSubProgramBlob blob = writer.Shader.SubProgramBlobs[index];
 					bool isTier = isTierLookup.Contains(subProgram.GpuProgramType);
-					ExportSerializedSubProgram(subProgram, writer, blob, type, isTier, best.BlobIndex == subProgram.BlobIndex);
+					ExportSerializedSubProgram(subProgram, writer, blob, type, isTier);
 				}
 				writer.WriteIndent(3);
 				writer.Write("}\n");
 			}
 		}
 
-		void ExportSerializedSubProgram(SerializedSubProgram subProgram, ShaderWriter writer, ShaderSubProgramBlob blob, ShaderType type, bool isTier, bool isBest)
+		void ExportSerializedSubProgram(SerializedSubProgram subProgram, ShaderWriter writer, ShaderSubProgramBlob blob, ShaderType type, bool isTier)
 		{
 			writer.WriteIndent(4);
 			writer.Write("SubProgram \"{0} ", subProgram.GpuProgramType.ToGPUPlatform(writer.Platform));
@@ -215,7 +215,7 @@ namespace Extract
 			var filesteam = writer.BaseStream as FileStream;
 			var folder = Path.GetDirectoryName(filesteam.Name);
 
-			ExportShaderSubProgram(shaderSubProgram, writer, type, isBest);
+			ExportShaderSubProgram(shaderSubProgram, writer, type);
 
 			writer.Write('\n');
 			writer.WriteIndent(4);
@@ -239,7 +239,7 @@ namespace Extract
 			}
 		}
 		//Refer ShaderSubProgram.Export
-		void ExportShaderSubProgram(ShaderSubProgram subProgram, ShaderWriter writer, ShaderType type, bool isBest)
+		void ExportShaderSubProgram(ShaderSubProgram subProgram, ShaderWriter writer, ShaderType type)
 		{
 			if (subProgram.GlobalKeywords.Count > 0)
 			{
@@ -269,7 +269,7 @@ namespace Extract
 					case GPUPlatform.d3d11:
 					case GPUPlatform.d3d11_9x:
 					case GPUPlatform.d3d9:
-						ExportGLSL(subProgram, writer, type, isBest);
+						ExportGLSL(subProgram, writer);
 						break;
 					default:
 						writer.WriteShaderData(
@@ -281,72 +281,42 @@ namespace Extract
 			}
 			writer.Write('"');
 		}
-		[HandleProcessCorruptedStateExceptions]
-		void ExportGLSL(ShaderSubProgram subProgram, ShaderWriter writer, ShaderType type, bool isBest)
+		void ExportGLSL(ShaderSubProgram subProgram, ShaderWriter writer)
 		{
-			Stopwatch stopWatch = new Stopwatch();
-			stopWatch.Start();
-
 			string hash = Hash(subProgram.ProgramData.ToArray());
-
-			Logger.Log(LogType.Debug, LogCategory.Export, $"Exporting Subprogram {hash}");
-
-			var data = DXShaderExporter.DXShaderObjectExporter.GetObjectData(writer.Version, subProgram.ProgramType.ToGPUPlatform(writer.Platform), subProgram);
 
 			var filesteam = writer.BaseStream as FileStream;
 			var folder = Path.GetDirectoryName(filesteam.Name);
-
-			string glslPath = $"{folder}/{hash}.glsl";
-			writer.WriteLine($"// {hash}.glsl");
-			writer.WriteLine($"// Objfile Length {data.Length}");
-			var variableCount = subProgram.ConstantBuffers
-				.Select(cb => cb.MatrixParams.Count + cb.VectorParams.Count)
-				.Sum();
-			writer.WriteLine($"// Variables {variableCount}");
-			var keyWordScore = 0;
-			keyWordScore += subProgram.GlobalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
-			keyWordScore += subProgram.LocalKeywords == null ? 0 : subProgram.LocalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
-			writer.WriteLine($"// KeywordScore {keyWordScore}");
-			writer.WriteLine($"// Best {isBest}");
-
+			var name = Path.GetFileNameWithoutExtension(filesteam.Name);
+			name = $"{name}_{hash}.glslinc";
+			string glslPath = $"{folder}/{name}";
+			writer.WriteLine("GLSLPROGRAM");
+			writer.WriteIndent(5);
+			writer.WriteLine($"#include {name}");
+			writer.WriteIndent(5);
+			writer.WriteLine("ENDGLSL");
+			writer.WriteIndent(5);
 			if (!File.Exists(glslPath))
 			{
-				try
+				var data = DXShaderExporter.DXShaderObjectExporter.GetObjectData(writer.Version, subProgram.ProgramType.ToGPUPlatform(writer.Platform), subProgram);
+
+				var ext = new HLSLccWrapper.WrappedGlExtensions();
+				ext.ARB_explicit_attrib_location = 1;
+				ext.ARB_explicit_uniform_location = 1;
+				ext.ARB_shading_language_420pack = 0;
+				ext.OVR_multiview = 0;
+				ext.EXT_shader_framebuffer_fetch = 0;
+				var shader = HLSLccWrapper.Shader.TranslateFromMem(data,
+					HLSLccWrapper.WrappedGLLang.LANG_DEFAULT, ext);
+				if (shader.OK != 0)
 				{
-					var ext = new HLSLccWrapper.WrappedGlExtensions();
-					ext.ARB_explicit_attrib_location = 1;
-					ext.ARB_explicit_uniform_location = 1;
-					ext.ARB_shading_language_420pack = 0;
-					ext.OVR_multiview = 0;
-					ext.EXT_shader_framebuffer_fetch = 0;
-					var shader = HLSLccWrapper.Shader.TranslateFromMem(data,
-						HLSLccWrapper.WrappedGLLang.LANG_DEFAULT, ext);
-					if (shader.OK != 0)
-					{
-						File.WriteAllText(glslPath, shader.Text);
-					}
-					else
-					{
-						File.WriteAllText(glslPath, $"FailCode {shader.OK}");
-						writer.WriteLine($"//Error with {hash}");
-						writer.WriteLine($"FailCode {shader.OK}");
-					}
-					Logger.Log(LogType.Debug, LogCategory.Export, $"Cross Compiled HLSL {stopWatch.ElapsedMilliseconds} ms");
-					stopWatch.Restart();
+					File.WriteAllText(glslPath, shader.Text);
 				}
-				catch (Exception ex)
+				else
 				{
-					Logger.Log(LogType.Debug, LogCategory.Export, $"Cross Compiled HLSL {stopWatch.ElapsedMilliseconds} ms");
-					stopWatch.Restart();
-					writer.WriteLine($"//Error with {hash}");
-					writer.WriteLine($"//{ex.ToString()}");
-					File.WriteAllText(glslPath, "Exception");
-					Logger.Log(LogType.Debug, LogCategory.Export, $"Exported asm {stopWatch.ElapsedMilliseconds} ms");
-					stopWatch.Restart();
+					writer.WriteLine($"//Error with {name} {shader.OK}");
 				}
-				
 			}
-			stopWatch.Stop();
 		}
 	}
 }
