@@ -1,5 +1,5 @@
 namespace DXShaderExporter{
-    internal enum ShaderResourceViewDimension
+	internal enum ShaderResourceViewDimension
 	{
 		Unknown = 0,
 		Buffer = 1,

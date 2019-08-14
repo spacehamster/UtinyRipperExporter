@@ -1,6 +1,6 @@
 namespace DXShaderExporter
 {
-    internal enum ShaderFlags
+	internal enum ShaderFlags
 	{
 		None = 0,
 		Debug = 1,

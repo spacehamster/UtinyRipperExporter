@@ -1,6 +1,6 @@
 namespace DXShaderExporter
 {
-    internal enum ShaderInputFlags
+	internal enum ShaderInputFlags
 	{
 		None,
 		UserPacked = 0x1,

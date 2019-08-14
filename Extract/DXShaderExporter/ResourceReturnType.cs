@@ -1,5 +1,5 @@
 namespace DXShaderExporter{
-    internal enum ResourceReturnType
+	internal enum ResourceReturnType
 	{
 		NotApplicable = 0,
 		UNorm = 1,

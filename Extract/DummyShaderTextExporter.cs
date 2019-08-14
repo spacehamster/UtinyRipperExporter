@@ -13,9 +13,9 @@ using Version = uTinyRipper.Version;
 
 namespace Extract
 {
-    class DummyShaderTextExporter : ShaderTextExporter
-    {
-        static string DummyShader = @"
+	class DummyShaderTextExporter : ShaderTextExporter
+	{
+		static string DummyShader = @"
 	//DummyShader
 	SubShader{
 		Tags { ""RenderType"" = ""Opaque"" }
@@ -36,40 +36,40 @@ namespace Extract
 		ENDCG
 	}
 ";
-        public override void Export(byte[] shaderData, TextWriter writer)
-        {
-            writer.Write("/*HelloWorld*/");
-        }
-        public static void ExportShader(Shader shader, IExportContainer container, Stream stream,
-            Func<Version, GPUPlatform, ShaderTextExporter> exporterInstantiator)
-        {
-            //Importing Hidden/Internal shaders causes the unity editor screen to turn black
-            if (shader.ParsedForm.Name.StartsWith("Hidden/")) return;
-            if (Shader.IsSerialized(container.Version))
-            {
-                using (ShaderWriter writer = new ShaderWriter(stream, shader, exporterInstantiator))
-                {
-                    writer.Write("Shader \"{0}\" {{\n", shader.ParsedForm.Name);
-                    shader.ParsedForm.PropInfo.Export(writer);
-                    writer.WriteIndent(1);
-                    writer.Write(DummyShader);
-                    if (shader.ParsedForm.FallbackName != string.Empty)
-                    {
-                        writer.WriteIndent(1);
-                        writer.Write("Fallback \"{0}\"\n", shader.ParsedForm.FallbackName);
-                    }
-                    if (shader.ParsedForm.CustomEditorName != string.Empty)
-                    {
-                        writer.WriteIndent(1);
-                        writer.Write("//CustomEditor \"{0}\"\n", shader.ParsedForm.CustomEditorName);
-                    }
-                    writer.Write('}');
-                }
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-    }
+		public override void Export(byte[] shaderData, TextWriter writer)
+		{
+			writer.Write("/*HelloWorld*/");
+		}
+		public static void ExportShader(Shader shader, IExportContainer container, Stream stream,
+			Func<Version, GPUPlatform, ShaderTextExporter> exporterInstantiator)
+		{
+			//Importing Hidden/Internal shaders causes the unity editor screen to turn black
+			if (shader.ParsedForm.Name.StartsWith("Hidden/")) return;
+			if (Shader.IsSerialized(container.Version))
+			{
+				using (ShaderWriter writer = new ShaderWriter(stream, shader, exporterInstantiator))
+				{
+					writer.Write("Shader \"{0}\" {{\n", shader.ParsedForm.Name);
+					shader.ParsedForm.PropInfo.Export(writer);
+					writer.WriteIndent(1);
+					writer.Write(DummyShader);
+					if (shader.ParsedForm.FallbackName != string.Empty)
+					{
+						writer.WriteIndent(1);
+						writer.Write("Fallback \"{0}\"\n", shader.ParsedForm.FallbackName);
+					}
+					if (shader.ParsedForm.CustomEditorName != string.Empty)
+					{
+						writer.WriteIndent(1);
+						writer.Write("//CustomEditor \"{0}\"\n", shader.ParsedForm.CustomEditorName);
+					}
+					writer.Write('}');
+				}
+			}
+			else
+			{
+				throw new NotImplementedException();
+			}
+		}
+	}
 }

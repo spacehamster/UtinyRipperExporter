@@ -1,5 +1,5 @@
 namespace DXShaderExporter{
-    internal enum ShaderInputType
+	internal enum ShaderInputType
 	{
 		CBuffer = 0,
 		TBuffer = 1,
