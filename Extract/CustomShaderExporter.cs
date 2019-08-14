@@ -1,5 +1,4 @@
-﻿using HLSLccCLR;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -314,14 +313,14 @@ namespace Extract
 			{
 				try
 				{
-					var ext = new CLRGlExtensions();
+					var ext = new HLSLccWrapper.WrappedGlExtensions();
 					ext.ARB_explicit_attrib_location = 1;
 					ext.ARB_explicit_uniform_location = 1;
 					ext.ARB_shading_language_420pack = 0;
 					ext.OVR_multiview = 0;
 					ext.EXT_shader_framebuffer_fetch = 0;
-					var shader = HLSLccWrapper.TranslateFromMem(data,
-						CLRGLLang.LANG_DEFAULT, ext);
+					var shader = HLSLccWrapper.Shader.TranslateFromMem(data,
+						HLSLccWrapper.WrappedGLLang.LANG_DEFAULT, ext);
 					if (shader.OK != 0)
 					{
 						File.WriteAllText(glslPath, shader.Text);

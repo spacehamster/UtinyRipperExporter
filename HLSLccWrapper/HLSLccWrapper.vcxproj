@@ -152,11 +152,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="HLSLccCLR.h" />
+    <ClInclude Include="HLSLccWrapper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="HLSLccCLR.cpp" />
+    <ClCompile Include="HLSLccWrapper.cpp" />
     <ClCompile Include="HLSLcc\src\cbstring\bsafe.c" />
     <ClCompile Include="HLSLcc\src\cbstring\bstraux.c" />
     <ClCompile Include="HLSLcc\src\cbstring\bstrlib.c" />

@@ -1,11 +1,11 @@
-#include "HLSLccCLR.h"
+#include "HLSLccWrapper.h"
 #include "HLSLcc.h"
 
 using namespace System;
 using namespace System::Runtime::InteropServices;
 
-namespace HLSLccCLR {
-	Shader^ HLSLccWrapper::TranslateFromFile(String^ filepath, CLRGLLang lang, CLRGlExtensions^ extensions) {
+namespace HLSLccWrapper {
+	Shader^ Shader::TranslateFromFile(String^ filepath, WrappedGLLang lang, WrappedGlExtensions^ extensions) {
 		Shader^ shader = gcnew Shader();
 		
 		IntPtr p = Marshal::StringToHGlobalAnsi(filepath);
@@ -40,10 +40,9 @@ namespace HLSLccCLR {
 		Marshal::FreeHGlobal(p);
 		return shader;
 	}
-	Shader^ HLSLccWrapper::TranslateFromMem(array<unsigned char>^ data, CLRGLLang lang, CLRGlExtensions^ extensions) {
+	Shader^ Shader::TranslateFromMem(array<unsigned char>^ data, WrappedGLLang lang, WrappedGlExtensions^ extensions) {
 		Shader^ shader = gcnew Shader();
 
-		const char* _filename;
 		IntPtr p = Marshal::AllocHGlobal(data->Length);
 		Marshal::Copy(data, 0, p, data->Length);
 		const char* unmanagedData = static_cast<char*>(p.ToPointer());

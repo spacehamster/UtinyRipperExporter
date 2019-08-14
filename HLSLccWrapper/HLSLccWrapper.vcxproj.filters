@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="HLSLccCLR.cpp" />
     <ClCompile Include="HLSLcc\src\cbstring\bsafe.c">
       <Filter>HLSLcc</Filter>
     </ClCompile>
@@ -81,13 +80,14 @@
     <ClCompile Include="HLSLcc\src\UseDefineChains.cpp">
       <Filter>HLSLcc</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="HLSLccCLR.h" />
+    <ClCompile Include="HLSLccWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="HLSLcc">
       <UniqueIdentifier>{d22e575f-1797-4b23-aabd-f6a46036889a}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="HLSLccWrapper.h" />
   </ItemGroup>
 </Project>

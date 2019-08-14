@@ -3,8 +3,8 @@
 
 using namespace System;
 
-namespace HLSLccCLR {
-	public enum class CLRGLLang { 
+namespace HLSLccWrapper {
+	public enum class WrappedGLLang { 
 		LANG_DEFAULT,// Depends on the HLSL shader model.
 		LANG_ES_100, LANG_ES_FIRST = LANG_ES_100,
 		LANG_ES_300,
@@ -21,7 +21,7 @@ namespace HLSLccCLR {
 		LANG_440, LANG_GL_LAST = LANG_440,
 		LANG_METAL,
 	};
-	public ref class CLRGlExtensions
+	public ref class WrappedGlExtensions
 	{
 	public:
 		uint32_t ARB_explicit_attrib_location;
@@ -34,11 +34,7 @@ namespace HLSLccCLR {
 		public:
 			String^ Text;
 			int OK;
-	};
-	public ref class HLSLccWrapper
-	{
-	public:
-		static Shader^ TranslateFromFile(String^ filepath, CLRGLLang lang, CLRGlExtensions^ extensions);
-		static Shader^ TranslateFromMem(array<unsigned char>^ data, CLRGLLang lang, CLRGlExtensions^ extensions);
+		static Shader^ TranslateFromFile(String^ filepath, WrappedGLLang lang, WrappedGlExtensions^ extensions);
+		static Shader^ TranslateFromMem(array<unsigned char>^ data, WrappedGLLang lang, WrappedGlExtensions^ extensions);
 	};
 }
