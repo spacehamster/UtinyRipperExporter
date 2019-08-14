@@ -31,80 +31,90 @@ namespace DXShaderExporter
 
         public VariableChunk(ConstantBuffer constantBuffer, int constantBufferIndex, uint variableOffset, ShaderGpuProgramType programType)
         {
+            const int memberSize = 12;
             this.constantBuffer = constantBuffer;
             this.constantBufferIndex = constantBufferIndex;
             this.programType = programType;
-            this.variables = BuildVariables();
+            this.variables = BuildVariables(constantBuffer);
 
             majorVersion = DXShaderObjectExporter.GetMajorVersion(programType);
             uint variableSize = majorVersion >= 5 ? (uint)40 : (uint)24;
             uint variableCount = (uint)variables.Count;
             uint dataOffset = variableOffset + variableCount * variableSize;
-            uint startOffset = 0;
             foreach (var variable in variables)
             {
                 variableNameLookup[variable.Name] = dataOffset;
                 var header = new VariableHeader();
                 header.nameOffset = dataOffset;
                 dataOffset += (uint)variable.Name.Length + 1;
-                header.startOffset = startOffset;
-                startOffset += variable.ShaderType.Size();
+                header.startOffset = (uint)variable.Index;
                 header.variable = variable;
-                if (!typeLookup.ContainsKey(variable.ShaderType))
+
+                typeLookup[variable.ShaderType] = dataOffset;
+                dataOffset += variable.ShaderType.Size();
+
+                variable.ShaderType.MemberOffset = variable.ShaderType.members.Count > 0 ? dataOffset : 0;
+                dataOffset += (uint)variable.ShaderType.members.Count * memberSize;
+
+                foreach (var member in variable.ShaderType.members)
                 {
-                    typeLookup[variable.ShaderType] = dataOffset;
-                    dataOffset += variable.ShaderType.Length();
+                    variableNameLookup[member.Name] = dataOffset;
+                    dataOffset += (uint)member.Name.Length + 1;
+
+                    typeLookup[member.ShaderType] = dataOffset;
+                    dataOffset += member.ShaderType.Size();
                 }
+
                 variableHeaders.Add(header);
             }
             size = dataOffset - variableOffset;
         }
-        List<Variable> BuildVariables()
+        List<Variable> BuildVariables(ConstantBuffer constantBuffer)
         {
-            List<Variable> usedVariables = new List<Variable>();
-            foreach (var param in constantBuffer.MatrixParams) usedVariables.Add(new Variable(param, programType));
-            foreach (var param in constantBuffer.VectorParams) usedVariables.Add(new Variable(param, programType));
-            usedVariables = usedVariables.OrderBy(v => v.Index).ToList();
             List<Variable> variables = new List<Variable>();
-            uint currentSize = 0;
-            for (int i = 0; i < usedVariables.Count; i++)
-            {
-                var variable = usedVariables[i];
-                if (variable.Index > currentSize)
+            foreach (var param in constantBuffer.MatrixParams) variables.Add(new Variable(param, programType));
+            foreach (var param in constantBuffer.VectorParams) variables.Add(new Variable(param, programType));
+            foreach (var param in constantBuffer.StructParams) variables.Add(new Variable(param, programType));
+            variables = variables.OrderBy(v => v.Index).ToList();
+            //Dummy variables prevents errors in rare edge cases but produces more verbose output
+            bool useDummyVariables = true;
+            if(useDummyVariables) {
+                var allVariables = new List<Variable>();
+                uint currentSize = 0;
+                for (int i = 0; i < variables.Count; i++)
                 {
-                    var sizeToAdd = variable.Index - currentSize;
-                    variables.AddRange(CreateDummyVariables(constantBufferIndex, variables.Count, (int)currentSize, (int)sizeToAdd, programType));
+                    var variable = variables[i];
+                    if (variable.Index > currentSize)
+                    {
+                        var sizeToAdd = variable.Index - currentSize;
+                        var id1 = constantBufferIndex;
+                        var id2 = allVariables.Count;
+                        allVariables.Add(new Variable($"unused_{id1}_{id2}", (int)currentSize, (int)sizeToAdd, programType));
+                    }
+                    allVariables.Add(variable);
+                    currentSize = (uint)variable.Index + variable.ShaderType.Size();
                 }
-                variables.Add(variable);
-                currentSize = (uint)variable.Index + variable.ShaderType.Size();
-
-            }
-            if (currentSize < constantBuffer.Size)
-            {
-                var sizeToAdd = constantBuffer.Size - currentSize;
-                variables.AddRange(CreateDummyVariables(constantBufferIndex, variables.Count, (int)currentSize, (int)sizeToAdd, programType));
+                if (currentSize < constantBuffer.Size)
+                {
+                    var sizeToAdd = constantBuffer.Size - currentSize;
+                    var id1 = constantBufferIndex;
+                    var id2 = allVariables.Count;
+                    allVariables.Add(new Variable($"unused_{id1}_{id2}", (int)currentSize, (int)sizeToAdd, programType));
+                }
+                variables = allVariables;
+            } else {
+                for (int i = 0; i < variables.Count; i++)
+                {
+                    if (i < variables.Count - 1)
+                    {
+                        variables[i].Length = (uint)variables[i + 1].Index - (uint)variables[i].Index;
+                    } else
+                    {
+                        variables[i].Length = (uint)constantBuffer.Size - (uint)variables[i].Index;
+                    }
+                }
             }
             return variables;
-        }
-        List<Variable> CreateDummyVariables(int id1, int id2, int offset, int sizeToAdd, ShaderGpuProgramType programType)
-        {
-            var result = new List<Variable>();
-            while (sizeToAdd > 0)
-            {
-                if (sizeToAdd > 16)
-                {
-                    result.Add(new Variable($"Unused_{id1}_{id2}", offset, 16, programType));
-                    sizeToAdd -= 16;
-                    offset += 16;
-                    id2++;
-                }
-                else
-                {
-                    result.Add(new Variable($"Unused_{id1}_{id2}", offset, sizeToAdd, programType));
-                    sizeToAdd = 0;
-                }
-            }
-            return result;
         }
         internal void Write(EndianWriter writer)
         {
@@ -112,14 +122,23 @@ namespace DXShaderExporter
             {
                 WriteVariableHeader(writer, header);
             }
-            var seenTypes = new HashSet<ShaderType>();
             foreach (var variable in variables)
             {
                 writer.WriteStringZeroTerm(variable.Name);
-                if (!seenTypes.Contains(variable.ShaderType))
+                WriteShaderType(writer, variable.ShaderType);
+
+                foreach (var member in variable.ShaderType.members)
                 {
-                    WriteVariableData(writer, variable);
-                    seenTypes.Add(variable.ShaderType);
+                    var nameOffset = variableNameLookup[member.Name];
+                    writer.Write(nameOffset);
+                    var memberOffset = typeLookup[member.ShaderType];
+                    writer.Write(memberOffset);
+                    writer.Write(member.Index);
+                }
+                foreach (var member in variable.ShaderType.members)
+                {
+                    writer.WriteStringZeroTerm(member.Name);
+                    WriteShaderType(writer, member.ShaderType);
                 }
             }
         }
@@ -130,7 +149,7 @@ namespace DXShaderExporter
             //startOffset
             writer.Write(header.startOffset);
             //Size
-            writer.Write(header.variable.ShaderType.Size());
+            writer.Write(header.variable.Length);
             //flags
             writer.Write((uint)ShaderVariableFlags.Used); //Unity only packs used variables as far as I can tell
 
@@ -151,29 +170,29 @@ namespace DXShaderExporter
                 writer.Write((uint)0);
             }
         }
-        private void WriteVariableData(EndianWriter writer, Variable variable)
+        private void WriteShaderType(EndianWriter writer, ShaderType shaderType)
         {
-            writer.Write((ushort)variable.ShaderType.ShaderVariableClass);
-            writer.Write((ushort)variable.ShaderType.ShaderVariableType);
-            writer.Write(variable.ShaderType.Rows);
-            writer.Write(variable.ShaderType.Columns);
-            writer.Write(variable.ShaderType.ElementCount);
-            writer.Write(variable.ShaderType.MemberCount);
-            writer.Write(variable.ShaderType.MemberOffset);
+            writer.Write((ushort)shaderType.ShaderVariableClass);
+            writer.Write((ushort)shaderType.ShaderVariableType);
+            writer.Write(shaderType.Rows);
+            writer.Write(shaderType.Columns);
+            writer.Write(shaderType.ElementCount);
+            writer.Write(shaderType.MemberCount);
+            writer.Write(shaderType.MemberOffset);
             if (majorVersion >= 5)
             {
-                if (variable.ShaderType.parentTypeOffset != 0 ||
-                    variable.ShaderType.unknown2 != 0 ||
-                    variable.ShaderType.unknown5 != 0 ||
-                    variable.ShaderType.parentNameOffset != 0)
+                if (shaderType.parentTypeOffset != 0 ||
+                    shaderType.unknown2 != 0 ||
+                    shaderType.unknown5 != 0 ||
+                    shaderType.parentNameOffset != 0)
                 {
                     throw new Exception("Shader variable type has invalid value");
                 }
-                writer.Write(variable.ShaderType.parentTypeOffset);
-                writer.Write(variable.ShaderType.unknown2);
-                writer.Write(variable.ShaderType.unknown4);
-                writer.Write(variable.ShaderType.unknown5);
-                writer.Write(variable.ShaderType.parentNameOffset);
+                writer.Write(shaderType.parentTypeOffset);
+                writer.Write(shaderType.unknown2);
+                writer.Write(shaderType.unknown4);
+                writer.Write(shaderType.unknown5);
+                writer.Write(shaderType.parentNameOffset);
             }
         }
     }

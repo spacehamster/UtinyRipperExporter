@@ -80,67 +80,9 @@ namespace DXShaderExporter
                 resourceChunk.Write(writer);
                 var data = memoryStream.ToArray();
                 var size = resourceChunk.Size;
-                if (data.Length != resourceChunk.Size) throw new Exception("Expected size does not match actual size");
+
+                //if (data.Length != resourceChunk.Size) throw new Exception("Expected size does not match actual size");
                 return data;
-            }
-        }
-        public static void FixShaderSubProgram(ShaderSubProgram shaderSubProgram, SerializedSubProgram serializedSubProgram)
-        {
-            /* Note: NameIndex isn't set on ShaderSubProgram parameters, Name is not set on
-                * SerializedSubProgram's ConstantBuffer and parameters
-                * Is NameIndex even needed? TODO: delete this later
-                */
-            var bindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
-            var contantBuffers = (ConstantBuffer[])typeof(ShaderSubProgram)
-                .GetField("m_constantBuffers", bindingFlags)
-                .GetValue(shaderSubProgram);
-            for (int i = 0; i < contantBuffers.Length; i++)
-            {
-                {
-                    object boxed = contantBuffers[i];
-                    var nameIndex = serializedSubProgram.ConstantBuffers[i].NameIndex;
-                    typeof(ConstantBuffer)
-                        .GetProperty("NameIndex", bindingFlags)
-                        .SetValue(boxed, nameIndex);
-                    contantBuffers[i] = (ConstantBuffer)boxed;
-                }
-                var constantBuffer = contantBuffers[i];
-                var matrixParams = (MatrixParameter[])typeof(ConstantBuffer)
-                    .GetField("m_matrixParams", bindingFlags)
-                    .GetValue(constantBuffer);
-                var vectorParams = (VectorParameter[])typeof(ConstantBuffer)
-                    .GetField("m_vectorParams", bindingFlags)
-                    .GetValue(constantBuffer);
-                for (int j = 0; j < matrixParams.Length; j++)
-                {
-
-                    var serializedParam = serializedSubProgram.ConstantBuffers[i].MatrixParams[j];
-                    object boxed = matrixParams[j];
-                    var nameIndex = serializedParam.NameIndex;
-                    typeof(MatrixParameter)
-                        .GetProperty("NameIndex", bindingFlags)
-                        .SetValue(boxed, nameIndex);
-                    matrixParams[j] = (MatrixParameter)boxed;
-                    var shaderParam = matrixParams[j];
-                    if (shaderParam.Name == null) throw new Exception("Name is null");
-                    if (shaderParam.Index < 0) throw new Exception("Index is out of bounds");
-                    if (shaderParam.NameIndex < 0) throw new Exception("NameIndex is out of bounds");
-
-                }
-                for (int j = 0; j < constantBuffer.VectorParams.Count; j++)
-                {
-                    var serializedParam = serializedSubProgram.ConstantBuffers[i].VectorParams[j];
-                    object boxed = vectorParams[j];
-                    var nameIndex = serializedParam.NameIndex;
-                    typeof(VectorParameter)
-                        .GetProperty("NameIndex", bindingFlags)
-                        .SetValue(boxed, nameIndex);
-                    vectorParams[j] = (VectorParameter)boxed;
-                    var shaderParam = vectorParams[j];
-                    if (shaderParam.Name == null) throw new Exception("Name is null");
-                    if (shaderParam.Index < 0) throw new Exception("Index is out of bounds");
-                    if (shaderParam.NameIndex < 0) throw new Exception("NameIndex is out of bounds");
-                }
             }
         }
         public static byte[] GetObjectData(Version m_version, GPUPlatform m_graphicApi, ShaderSubProgram shaderSubProgram)

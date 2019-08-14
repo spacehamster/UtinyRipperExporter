@@ -174,12 +174,12 @@
     <Compile Include="DXShaderExporter\ShaderInputType.cs" />
     <Compile Include="DXShaderExporter\ShaderResourceViewDimension.cs" />
     <Compile Include="DXShaderExporter\ShaderType.cs" />
+    <Compile Include="DXShaderExporter\ShaderTypeMember.cs" />
     <Compile Include="DXShaderExporter\ShaderVariableClass.cs" />
     <Compile Include="DXShaderExporter\ShaderVariableFlags.cs" />
     <Compile Include="DXShaderExporter\ShaderVariableType.cs" />
     <Compile Include="DXShaderExporter\Variable.cs" />
     <Compile Include="DXShaderExporter\VariableChunk.cs" />
-    <Compile Include="DXShaderObjectExporter.cs" />
     <Compile Include="ExportSettings.cs" />
     <Compile Include="GameStructureExporter.cs" />
     <Compile Include="Program.cs" />

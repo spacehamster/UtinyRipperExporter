@@ -216,8 +216,6 @@ namespace Extract
             var filesteam = writer.BaseStream as FileStream;
             var folder = Path.GetDirectoryName(filesteam.Name);
 
-            DXShaderObjectExporter.FixShaderSubProgram(shaderSubProgram,
-                subProgram);
             ExportShaderSubProgram(shaderSubProgram, writer, type, isBest);
 
             writer.Write('\n');
