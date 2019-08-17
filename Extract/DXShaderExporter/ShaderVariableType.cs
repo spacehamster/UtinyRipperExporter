@@ -49,16 +49,5 @@
 		ReadWriteStructuredBuffer,
 		AppendStructuredBuffer,
 		ConsumeStructuredBuffer,
-		// Only used as a marker when analyzing register types
-		ForceInt = 152,
-		// Integer that can be either signed or unsigned. Only used as an intermediate step when doing data type analysis
-		IntAmbiguous = 153,
-		// Partial precision types. Used when doing type analysis
-		Float10 = 53,
-		Float16 = 54,
-		Int16 = 156,
-		Int12 = 157,
-		Uint16 = 158,
-		ForceDWord = 0x7fffffff
 	}
 }
