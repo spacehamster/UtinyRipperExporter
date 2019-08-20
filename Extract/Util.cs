@@ -202,7 +202,12 @@ namespace Extract
 			{
 				return mb.Name;
 			}
-			return "";
+			var nameProp = asset.GetType().GetProperty("Name");
+			if(nameProp != null)
+			{
+				return (string)nameProp.GetValue(asset);
+			}
+			return "Unnamed";
 		}
 		public static void RandomizeAssetGuid(IEnumerable<uTinyRipper.Classes.Object> assets)
 		{

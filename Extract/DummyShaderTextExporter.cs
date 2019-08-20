@@ -44,7 +44,7 @@ namespace Extract
 			Func<Version, GPUPlatform, ShaderTextExporter> exporterInstantiator)
 		{
 			//Importing Hidden/Internal shaders causes the unity editor screen to turn black
-			if (shader.ParsedForm.Name.StartsWith("Hidden/")) return;
+			if (shader.ParsedForm.Name?.StartsWith("Hidden/") == true) return;
 			if (Shader.IsSerialized(container.Version))
 			{
 				using (ShaderWriter writer = new ShaderWriter(stream, shader, exporterInstantiator))
@@ -68,7 +68,7 @@ namespace Extract
 			}
 			else
 			{
-				throw new NotImplementedException();
+				shader.ExportBinary(container, stream, exporterInstantiator);
 			}
 		}
 	}

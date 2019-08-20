@@ -18,7 +18,7 @@ namespace Extract
 {
 	public class DumpInfo
 	{
-		static void DumpFileInfo(ISerializedFile container, string exportPath)
+		static void DumpFileInfo(SerializedFile container, string exportPath)
 		{
 			Console.WriteLine($"Dumping container {container.Name }");
 			Directory.CreateDirectory(Path.GetDirectoryName(exportPath));
@@ -92,20 +92,12 @@ namespace Extract
 		}
 		static void DumpObjectInfo(IEnumerable<Object> objects, StreamWriter sw)
 		{
-			sw.WriteLine("Name, ClassID, GUID, FileIndex, PathID, asset.IsValid");
+			sw.WriteLine("Name, ClassID, GUID, FileIndex, PathID, asset.IsValid, Exporter");
 			foreach (var asset in objects)
 			{
-				var nameProp = asset.GetType().GetProperty("Name");
+				var name = Util.GetName(asset);
 				var pptr = asset.File.CreatePPtr(asset);
-				if (nameProp != null)
-				{
-					var name = nameProp.GetValue(asset);
-					sw.WriteLine($"{name}, {asset.ClassID}, {asset.GUID}, {pptr.FileIndex}, {asset.PathID}, {asset.IsValid}");
-				}
-				else
-				{
-					sw.WriteLine($"NamelessObject, {asset.ClassID}, {asset.GUID}, {pptr.FileIndex}, {asset.PathID}, {asset.IsValid}");
-				}
+				sw.WriteLine($"{name}, {asset.ClassID}, {asset.GUID}, {pptr.FileIndex}, {asset.PathID}, {asset.IsValid}");
 			}
 		}
 		static void UnknownFileType(object file, string filepath, string exportPath)
@@ -132,7 +124,7 @@ namespace Extract
 			}
 			return result;
 		}
-		static void WriteFileInfo(ISerializedFile container, StreamWriter sw) {
+		static void WriteFileInfo(SerializedFile container, StreamWriter sw) {
 			sw.WriteLine($"  File: {container.Name}");
 			sw.WriteLine($"	File.Collection: {container.Collection}");
 			sw.WriteLine($"	File.Platform: {container.Platform}");
@@ -143,6 +135,18 @@ namespace Extract
 				sw.WriteLine($"	  Dependency.AssetPath: {dep.AssetPath}");
 				sw.WriteLine($"	  Dependency.FilePath: {dep.FilePath}");
 				sw.WriteLine($"	  Dependency.FilePathOrigin: {dep.FilePathOrigin}");
+			}
+			sw.WriteLine($"	File.Metadata: {container.Metadata.Entries.Count}");
+			var factory = new AssetFactory();
+			foreach (var entry in container.Metadata.Entries)
+			{
+				var info = entry.Value;
+				AssetInfo assetInfo = new AssetInfo(container, info.PathID, info.ClassID);
+				Object asset = factory.CreateAsset(assetInfo);
+				if (asset == null)
+				{
+					sw.WriteLine($"	  Unimplemented Asset: {info.ClassID}, {info.ScriptID}, {info.TypeID}, {info.PathID}, {info.IsStripped}");
+				}
 			}
 		}
 		public static string HashToString(Hash128 hash)
