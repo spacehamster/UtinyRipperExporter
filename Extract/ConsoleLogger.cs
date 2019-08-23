@@ -16,7 +16,7 @@ namespace Extract
 			var dir = Path.GetDirectoryName(path);
 			if(dir != "") Directory.CreateDirectory(dir);
 			writer = new StreamWriter(path);
-			if (!RunetimeUtils.IsRunningOnMono)
+			if (!RunetimeUtils.IsRunningOnMono && Console.LargestWindowWidth > 0)
 			{
 				Console.WindowWidth = (int)(Console.LargestWindowWidth * 0.8f);
 				Console.BufferHeight = 2000;
