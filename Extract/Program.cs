@@ -17,6 +17,7 @@ namespace Extract
 				{
 					Config.IsGenerateGUIDByContent = o.GUIDByContent;
 					Config.IsExportDependencies = o.ExportDependencies;
+					Config.IsExportScriptsAsPublic = o.PublicScripts;
 					if (o.ExportScripts)
 					{
 						ScriptExporter.ExportAll(o.GameDir, o.ExportDir, o.ScriptByName);
@@ -43,10 +44,6 @@ namespace Extract
 						if(dirName == "Kingmaker_Data")
 						{
 							ScriptFixer.FixKingmakerScripts(o.ExportDir);
-						}
-						if(dirName == "PillarsOfEternityII_Data")
-						{
-							ScriptFixer.FixPoE2Scripts(o.ExportDir);
 						}
 					}
 				});

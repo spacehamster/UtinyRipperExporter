@@ -50,6 +50,8 @@ namespace Extract
 		public bool ShaderByName { get; set; }
 		[Option("organizescriptableobjects", Default = true, Required = false, HelpText = "Export scriptable objects in seperate folders by type")]
 		public bool OrganizeScriptableObjects { get; set; }
+		[Option("publicscripts", Default = true, Required = false, HelpText = "Export script stubs as public")]
+		public bool PublicScripts { get; set; }
 		[Option("shadermode", Default = ShaderExportMode.Dummy, Required = false, HelpText = "Shader export mode")]
 		public ShaderExportMode ShaderExportMode { get; set; }
 		[Option("condenseshadersubprograms", Default = false, Required = false, HelpText = "Condense the number of shader subprograms that are exported")]

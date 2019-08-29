@@ -106,6 +106,21 @@ namespace Extract
 				.ToList();
 			return results;
 		}
+
+		public static T GetMember<T>(object obj, string name)
+		{
+			var field = obj.GetType().GetField(name, Util.AllBindingFlags);
+			if (field != null) {
+				return (T)field.GetValue(obj);
+			}
+			var prop = obj.GetType().GetProperty(name, Util.AllBindingFlags);
+			if(prop != null)
+			{
+				return (T)prop.GetValue(obj);
+			}
+			throw new Exception($"Could not find member {name} on {obj.GetType()}");
+		}
+
 		internal static List<string> GetManifestAssets(string filePath)
 		{
 			var lines = File.ReadAllLines(filePath).ToList();

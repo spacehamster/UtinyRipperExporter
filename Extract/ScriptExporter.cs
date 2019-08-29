@@ -143,10 +143,18 @@ namespace Extract
 		{
 			Util.PrepareExportDirectory(ExportPath);
 			var managedPath = Path.Combine(GameDir, "Managed");
-			var globalgamemanagersPath = Path.Combine(GameDir, "globalgamemanagers.assets");
+			var mainAssetPath = Path.Combine(GameDir, "globalgamemanagers.assets");
+			if (!File.Exists(mainAssetPath))
+			{
+				var mainData = Path.Combine(GameDir, "mainData");
+				if (File.Exists(mainData))
+				{
+					mainAssetPath = mainData;
+				}
+			}
 			var gameStructure = GameStructure.Load(new string[]
 			{
-				globalgamemanagersPath,
+				mainAssetPath,
 				managedPath
 			});
 			fileCollection = gameStructure.FileCollection;

@@ -28,7 +28,7 @@ namespace Extract
 			ExportPath = settings.ExportDir;
 			options = new ExportOptions()
 			{
-				Version = new Version(2017, 3, 0, VersionType.Final, 3),
+				Version = new Version(2018, 1, 0, VersionType.Final, 3),
 				Platform = Platform.NoTarget,
 				Flags = TransferInstructionFlags.NoTransferInstructionFlags,
 			};
@@ -119,7 +119,11 @@ namespace Extract
 		private void Export()
 		{
 			Util.PrepareExportDirectory(ExportPath);
-			m_GameStructure.Export(ExportPath, Filter);
+			var assets = m_GameStructure.FileCollection.FetchAssets().Where(Filter);
+			m_GameStructure.FileCollection.Exporter.Export(ExportPath,
+				m_GameStructure.FileCollection,
+				assets,
+				options);
 		}
 		private void ExportBundles(IEnumerable<string> requestedPaths)
 		{
@@ -130,7 +134,11 @@ namespace Extract
 				var file = Util.FindFile(m_GameStructure.FileCollection, path);
 				requestedFiles.Add(file);
 			}
-			m_GameStructure.Export(ExportPath, (obj) => requestedFiles.Contains(obj.File) && Filter(obj));
+			var assets = m_GameStructure.FileCollection.FetchAssets().Where((obj) => true || requestedFiles.Contains(obj.File) && Filter(obj));
+			m_GameStructure.FileCollection.Exporter.Export(ExportPath,
+				m_GameStructure.FileCollection,
+				assets,
+				options);
 		}
 		static DateTime lastUpdate = DateTime.Now - TimeSpan.FromDays(1);
 		public static void UpdateTitle(string text, params string[] arguments)
