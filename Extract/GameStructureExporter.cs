@@ -19,20 +19,40 @@ namespace Extract
 		string GameDir;
 		string ExportPath;
 		ExportOptions options;
-		GameStructure m_GameStructure = null;
+		public GameStructure GameStructure = null;
 		HashSet<string> m_LoadedFiles = new HashSet<string>();
 		Func<uTinyRipper.Classes.Object, bool> Filter;
-		private GameStructureExporter(ExportSettings settings, List<string> files, Func<uTinyRipper.Classes.Object, bool> filter = null)
+		public GameStructureExporter(ExportSettings settings, List<string> files, Func<uTinyRipper.Classes.Object, bool> filter = null)
 		{
 			GameDir = settings.GameDir;
 			ExportPath = settings.ExportDir;
 			options = new ExportOptions()
 			{
-				Version = new Version(2018, 1, 0, VersionType.Final, 3),
 				Platform = Platform.NoTarget,
 				Flags = TransferInstructionFlags.NoTransferInstructionFlags,
 			};
-			m_GameStructure = GameStructure.Load(files);
+			GameStructure = GameStructure.Load(files);
+
+			if (string.IsNullOrEmpty(settings.ExportVersion))
+			{
+				//The version in unity default resources and unity_builtin_extra seem to differ from the game version
+				var versionCheckFile = GameStructure.FileCollection.Files.FirstOrDefault(f => !Path.GetFileName(f.Name).Contains("unity"));
+				if (versionCheckFile != null)
+				{
+					options.Version = versionCheckFile.Version;
+					Logger.Log(LogType.Info, LogCategory.Export, $"Version detected as {options.Version.ToString()}");
+				}
+				else
+				{
+					Logger.Log(LogType.Warning, LogCategory.Export, $"Could not detect version");
+				}
+			}
+			else
+			{
+				var version = new Version();
+				version.Parse(settings.ExportVersion);
+				Logger.Log(LogType.Info, LogCategory.Export, $"Version set to {version.ToString()}");
+			}
 			if (filter != null)
 			{
 				Filter = filter;
@@ -41,7 +61,7 @@ namespace Extract
 			{
 				Filter = (obj) => true;
 			}
-			var fileCollection = m_GameStructure.FileCollection;
+			var fileCollection = GameStructure.FileCollection;
 			var textureExporter = new TextureAssetExporter();
 			var engineExporter = new EngineAssetExporter();
 			fileCollection.Exporter.OverrideExporter(ClassIDType.Material, engineExporter);
@@ -116,12 +136,12 @@ namespace Extract
 				}
 			}
 		}
-		private void Export()
+		public void Export()
 		{
 			Util.PrepareExportDirectory(ExportPath);
-			var assets = m_GameStructure.FileCollection.FetchAssets().Where(Filter);
-			m_GameStructure.FileCollection.Exporter.Export(ExportPath,
-				m_GameStructure.FileCollection,
+			var assets = GameStructure.FileCollection.FetchAssets().Where(Filter);
+			GameStructure.FileCollection.Exporter.Export(ExportPath,
+				GameStructure.FileCollection,
 				assets,
 				options);
 		}
@@ -131,12 +151,12 @@ namespace Extract
 			var requestedFiles = new HashSet<ISerializedFile>();
 			foreach (var path in requestedPaths)
 			{
-				var file = Util.FindFile(m_GameStructure.FileCollection, path);
+				var file = Util.FindFile(GameStructure.FileCollection, path);
 				requestedFiles.Add(file);
 			}
-			var assets = m_GameStructure.FileCollection.FetchAssets().Where((obj) => true || requestedFiles.Contains(obj.File) && Filter(obj));
-			m_GameStructure.FileCollection.Exporter.Export(ExportPath,
-				m_GameStructure.FileCollection,
+			var assets = GameStructure.FileCollection.FetchAssets().Where((obj) => true || requestedFiles.Contains(obj.File) && Filter(obj));
+			GameStructure.FileCollection.Exporter.Export(ExportPath,
+				GameStructure.FileCollection,
 				assets,
 				options);
 		}

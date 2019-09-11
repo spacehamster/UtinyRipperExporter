@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using uTinyRipper;
 using uTinyRipper.ArchiveFiles;
+using uTinyRipper.Assembly;
 using uTinyRipper.BundleFiles;
 using uTinyRipper.Classes;
 using uTinyRipper.ResourceFiles;
@@ -35,6 +36,12 @@ namespace Extract
 						sw.WriteLine("");
 						DumpBuildSettings(buildSettings, sw);
 					}
+					MonoManager monoManager = (MonoManager)container.FetchAssets().FirstOrDefault(asset => asset is MonoManager);
+					if (monoManager != null)
+					{
+						sw.WriteLine("");
+						DumpMonoManager(monoManager, sw);
+					}
 				}
 			}
 		}
@@ -44,7 +51,7 @@ namespace Extract
 			Directory.CreateDirectory(Path.GetDirectoryName(exportPath));
 			using (var sw = new StreamWriter($"{exportPath}.txt"))
 			{
-				if(fileList is BundleFile bf)
+				if (fileList is BundleFile bf)
 				{
 					DumpBundleFileInfo(bf, sw);
 				}
@@ -97,7 +104,15 @@ namespace Extract
 			{
 				var name = Util.GetName(asset);
 				var pptr = asset.File.CreatePPtr(asset);
-				sw.WriteLine($"{name}, {asset.ClassID}, {asset.GUID}, {pptr.FileIndex}, {asset.PathID}, {asset.IsValid}");
+				var extra = "";
+				if (asset is MonoScript ms)
+				{
+					string scriptName = $"[{ms.AssemblyName}]";
+					if (!string.IsNullOrEmpty(ms.Namespace)) scriptName += $"{ms.Namespace}.";
+					scriptName += $"{ms.ClassName}:{HashToString(ms.PropertiesHash)}";
+					extra = scriptName;
+				}
+				sw.WriteLine($"{name}, {asset.ClassID}, {asset.GUID}, {pptr.FileIndex}, {asset.PathID}, {asset.IsValid},{extra}");
 			}
 		}
 		static void UnknownFileType(object file, string filepath, string exportPath)
@@ -124,7 +139,8 @@ namespace Extract
 			}
 			return result;
 		}
-		static void WriteFileInfo(SerializedFile container, StreamWriter sw) {
+		static void WriteFileInfo(SerializedFile container, StreamWriter sw)
+		{
 			sw.WriteLine($"  File: {container.Name}");
 			sw.WriteLine($"	File.Collection: {container.Collection}");
 			sw.WriteLine($"	File.Platform: {container.Platform}");
@@ -136,7 +152,37 @@ namespace Extract
 				sw.WriteLine($"	  Dependency.FilePath: {dep.FilePath}");
 				sw.WriteLine($"	  Dependency.FilePathOrigin: {dep.FilePathOrigin}");
 			}
-			sw.WriteLine($"	File.Metadata: {container.Metadata.Entries.Count}");
+			if (container.Metadata.Hierarchy != null)
+			{
+				var SerializeTypeTrees = Util.GetMember<bool>(container.Metadata.Hierarchy, "SerializeTypeTrees");
+				var Types = Util.GetMember<IReadOnlyList<object>>(container.Metadata.Hierarchy, "Types");
+				var Name = Util.GetMember<string>(container.Metadata.Hierarchy, "Name");
+				sw.WriteLine($"	File.Metadata.Hierarchy:");
+				sw.WriteLine($"		Hierarchy.Name: {Name}");
+				sw.WriteLine($"		Hierarchy.SerializeTypeTrees: {SerializeTypeTrees}");
+				sw.WriteLine($"		Hierarchy.Types: {Types.Count}");
+				if (Types.Count > 0)
+				{
+					sw.WriteLine($"			ClassID, IsStrippedType, ScriptID, ScriptHash, TypeHash, NodeCount");
+				}
+				foreach (var type in Types)
+				{
+					var ClassID = Util.GetMember<ClassIDType>(type, "ClassID");
+					var IsStrippedType = Util.GetMember<bool>(type, "IsStrippedType");
+					var ScriptID = Util.GetMember<short>(type, "ScriptID");
+					var Tree = Util.GetMember<object>(type, "Tree");
+					var ScriptHash = Util.GetMember<Hash128>(type, "ScriptHash");
+					var TypeHash = Util.GetMember<Hash128>(type, "TypeHash");
+					var nodeCount = Tree == null ? "Null" : Util.GetMember<IReadOnlyList<object>>(Tree, "Nodes").Count.ToString();
+					sw.WriteLine($"			{ClassID}, {IsStrippedType}, {ScriptID}, {HashToString(ScriptHash)}, {HashToString(TypeHash)}, {nodeCount}");
+				}
+			}
+			else
+			{
+				sw.WriteLine($"	File.Metadata.Hierarchy: Null");
+			}
+			sw.WriteLine($"	File.Metadata.Entries: {container.Metadata.Entries.Count}");
+
 			var factory = new AssetFactory();
 			foreach (var entry in container.Metadata.Entries)
 			{
@@ -162,32 +208,64 @@ namespace Extract
 		{
 			sw.WriteLine("BuildSettings");
 			sw.WriteLine($"  Version: {buildSettings.Version}");
-			sw.WriteLine("  Scenes");
-			for(int i = 0; i < buildSettings.Scenes.Count; i++)
+			sw.WriteLine($"  Scenes {buildSettings.Scenes.Count}");
+			for (int i = 0; i < buildSettings.Scenes.Count; i++)
 			{
 				var scene = buildSettings.Scenes[i];
 				sw.WriteLine($"	{i}: {scene}");
 			}
-			sw.WriteLine("  PreloadedPlugins");
+			sw.WriteLine($"  PreloadedPlugins {buildSettings.PreloadedPlugins}");
 			for (int i = 0; i < buildSettings.PreloadedPlugins.Count; i++)
 			{
 				var preloadedPlugin = buildSettings.PreloadedPlugins[i];
 				sw.WriteLine($"	{i}: {preloadedPlugin}");
 			}
-			sw.WriteLine("  BuildTags");
+			sw.WriteLine($"  BuildTags {buildSettings.BuildTags.Count}");
 			for (int i = 0; i < buildSettings.BuildTags.Count; i++)
 			{
 				var buildTag = buildSettings.BuildTags[i];
 				sw.WriteLine($"	{i}: {buildTag}");
 			}
-			sw.WriteLine("  RuntimeClassHashes");
-			foreach(var kv in buildSettings.RuntimeClassHashes.OrderBy(kv => kv.Key)) {
+			sw.WriteLine($"  RuntimeClassHashes {buildSettings.RuntimeClassHashes.Count}");
+			foreach (var kv in buildSettings.RuntimeClassHashes.OrderBy(kv => kv.Key))
+			{
 				sw.WriteLine($"	{kv.Key}: {HashToString(kv.Value)}");
 			}
-			sw.WriteLine("  ScriptHashes");
+			sw.WriteLine($"  ScriptHashes {buildSettings.ScriptHashes.Count}");
 			foreach (var kv in buildSettings.ScriptHashes)
 			{
 				sw.WriteLine($"	{HashToString(kv.Key)}: {HashToString(kv.Value)}");
+			}
+		}
+		public static void DumpMonoManager(MonoManager monoManager, StreamWriter sw)
+		{
+			sw.WriteLine("MonoManager");
+			sw.WriteLine($"  HasCompileErrors {monoManager.HasCompileErrors}");
+			sw.WriteLine($"  EngineDllModDate {monoManager.EngineDllModDate}");
+			sw.WriteLine($"  CustomDlls {monoManager.CustomDlls?.Count}");
+			foreach (var dll in monoManager.CustomDlls ?? new string[] { })
+			{
+				sw.WriteLine($"    {dll}");
+			}
+			sw.WriteLine($"  AssemblyIdentifiers {monoManager.AssemblyIdentifiers?.Count}");
+			foreach (var dll in monoManager.AssemblyIdentifiers ?? new string[] { })
+			{
+				sw.WriteLine($"    {dll}");
+			}
+			sw.WriteLine($"  AssemblyNames {monoManager.AssemblyNames?.Count}");
+			foreach (var dll in monoManager.AssemblyNames ?? new string[] { })
+			{
+				sw.WriteLine($"    {dll}");
+			}
+			sw.WriteLine($"  AssemblyTypes {monoManager.AssemblyTypes?.Count}");
+			foreach (var dll in monoManager.AssemblyTypes ?? new int[] { })
+			{
+				sw.WriteLine($"    {dll}");
+			}
+			sw.WriteLine($"  Scripts {monoManager.Scripts.Count}");
+			foreach (var dll in monoManager.Scripts ?? new PPtr<MonoScript>[] { })
+			{
+				sw.WriteLine($"    {dll}");
 			}
 		}
 		static void DumpFile(string filepath, string exportPath)
@@ -224,7 +302,8 @@ namespace Extract
 					var resourceFile = resourceFileScheme.ReadFile();
 					UnknownFileType(resourceFile, filepath, Path.Combine(exportPath, filename));
 				}
-			} catch(Exception ex)
+			}
+			catch (Exception ex)
 			{
 				var errMessage = $"Error dumping file {filepath}\n{ex.ToString()}";
 				Logger.Log(LogType.Error, LogCategory.General, errMessage);
@@ -234,7 +313,7 @@ namespace Extract
 		public static void DumpAllFileInfo(string gameDir, string exportPath)
 		{
 			Util.PrepareExportDirectory(exportPath);
-			foreach(var file in AllFilesInFolder(gameDir))
+			foreach (var file in AllFilesInFolder(gameDir))
 			{
 				var ext = Path.GetExtension(file);
 				if (ext != "" && ext != ".assets" && ext != ".unity3d") continue;
@@ -246,6 +325,180 @@ namespace Extract
 				}
 				DumpFile(file, Path.Combine(exportPath, relPath));
 			}
+		}
+		public static void DumpSerializedTypes(string filePath, string managedPath, string exportPath)
+		{
+			Util.PrepareExportDirectory(exportPath);
+			Directory.CreateDirectory(exportPath);
+			var fileCollection = new FileCollection();
+			fileCollection.AssemblyManager.ScriptingBackEnd = ScriptingBackEnd.Mono;
+			foreach (var assembly in Directory.GetFiles(managedPath, "*.dll", SearchOption.TopDirectoryOnly))
+			{
+				fileCollection.AssemblyManager.Load(assembly);
+			}
+			var scheme = FileCollection.LoadScheme(filePath, Path.GetFileName(filePath));
+			var seralizedFiles = new List<SerializedFile>();
+			if (scheme is SerializedFileScheme serializedFileScheme)
+			{
+				var serializedFile = serializedFileScheme.ReadFile(fileCollection, fileCollection.AssemblyManager);
+				seralizedFiles.Add(serializedFile);
+
+			}
+			else if (scheme is BundleFileScheme bundleFileScheme)
+			{
+				var bundleFile = bundleFileScheme.ReadFile(fileCollection, fileCollection.AssemblyManager);
+				seralizedFiles.AddRange(bundleFile.SerializedFiles);
+			}
+			else
+			{
+				throw new Exception();
+			}
+
+			using (var sw = new StreamWriter($"{exportPath}/dump.txt"))
+			{
+				foreach (var serializedFile in seralizedFiles)
+				{
+					var assets = serializedFile.FetchAssets();
+					foreach (var asset in assets)
+					{
+						if (asset is MonoScript monoscript && monoscript.AssemblyName == "Assembly-CSharp")
+						{
+							SerializableType behaviourType = monoscript.GetBehaviourType();
+							if (behaviourType != null)
+							{
+								var Structure = behaviourType.CreateBehaviourStructure();
+								sw.WriteLine($"[{monoscript.AssemblyName}]{monoscript.Namespace}.{monoscript.Name}");
+								DumpSerializedTypes(Structure, sw, 0);
+								sw.WriteLine($"");
+							}
+							else
+							{
+								sw.WriteLine($"[{monoscript.AssemblyName}]{monoscript.Namespace}.{monoscript.Name} - No Behaviour Type");
+								sw.WriteLine($"");
+							}
+						}
+					}
+				}
+			}
+		}
+		public static void DumpSerializedTypes(SerializableStructure structure, StreamWriter sw, int indent)
+		{
+			string spaces = new string(' ', indent * 2);
+			if (indent > 10)
+			{
+				sw.WriteLine($"{spaces}Max depth exceded");
+			}
+			sw.WriteLine($"{spaces}{structure.Type} : {structure.Base?.ToString() ?? "object"}");
+			if(structure.Base != null && structure.Base.Type.Namespace != "UnityEngine")
+			{
+				DumpSerializedTypes(structure.Base, sw, indent + 1);
+			}
+			foreach (var field in structure.Fields)
+			{
+				spaces = new string(' ', (indent + 1) * 2);
+				if (field.Type == PrimitiveType.Complex)
+				{
+					ISerializableStructure ComplexType = Util.GetMember<ISerializableStructure>(field, "ComplexType");
+					if (ComplexType is SerializablePointer pptr)
+					{
+						sw.WriteLine($"{spaces}PPTR<{ComplexType}> {field.Name};");
+					}
+					else if(ComplexType is SerializableStructure fieldStructure)
+					{
+						sw.WriteLine($"{spaces}{fieldStructure} {field.Name};");
+						DumpSerializedTypes(fieldStructure, sw, indent + 1);
+					} else
+					{
+						sw.WriteLine($"{spaces}{ComplexType} {field.Name};");
+					}
+				}
+				else
+				{
+					sw.WriteLine($"{spaces}{field.Type} {field.Name};");
+				}
+			}
+		}
+		public static void DumpTypeTree(string filePath, string exportPath)
+		{
+			Directory.CreateDirectory(Path.GetDirectoryName(exportPath));
+			var fileCollection = new FileCollection();
+			var scheme = FileCollection.LoadScheme(filePath, Path.GetFileName(filePath));
+			var seralizedFiles = new List<SerializedFile>();
+			if (scheme is SerializedFileScheme serializedFileScheme)
+			{
+				var serializedFile = serializedFileScheme.ReadFile(fileCollection, fileCollection.AssemblyManager);
+				seralizedFiles.Add(serializedFile);
+
+			}
+			else if (scheme is BundleFileScheme bundleFileScheme)
+			{
+				var bundleFile = bundleFileScheme.ReadFile(fileCollection, fileCollection.AssemblyManager);
+				seralizedFiles.AddRange(bundleFile.SerializedFiles);
+			}
+			else
+			{
+				throw new Exception();
+			}
+			using (var sw = new StreamWriter(exportPath))
+			{
+				foreach (var file in seralizedFiles)
+				{
+					DumpTypeInfo(file, sw);
+				}
+			}
+		}
+		static bool CompareHash(Hash128 hash1, Hash128 hash2)
+		{
+			return hash1.Data0 == hash2.Data0 &&
+			hash1.Data1 == hash2.Data1 &&
+			hash1.Data2 == hash2.Data2 &&
+			hash1.Data3 == hash2.Data3;
+		}
+		internal static void DumpTypeInfo(SerializedFile serializedFile, StreamWriter sw)
+		{
+			foreach(var asset in serializedFile.FetchAssets().Where(asset => asset is MonoScript))
+			{
+				var monoScript = asset as MonoScript;
+				sw.WriteLine($"\t[{monoScript.AssemblyName}]{monoScript.Namespace}.{monoScript.ClassName} - {HashToString(monoScript.PropertiesHash)}");
+
+			}
+			sw.WriteLine($"SerializedFile");
+			sw.WriteLine($"Name {serializedFile.Name}");
+			sw.WriteLine($"NameOrigin {serializedFile.NameOrigin}");
+			sw.WriteLine($"Platform {serializedFile.Platform}");
+			sw.WriteLine($"Version {serializedFile.Version}");
+			sw.WriteLine($"Preloads:");
+			foreach (var ptr in serializedFile.Metadata.Preloads)
+			{
+				sw.WriteLine($"\t{ptr}");
+			}
+			var hierarchy = serializedFile.Metadata.Hierarchy;
+			sw.WriteLine($"TypeTree Version {hierarchy.Version}");
+			sw.WriteLine($"TypeTree Platform {hierarchy.Platform}");
+			var SerializeTypeTrees = Util.GetMember<bool>(hierarchy, "SerializeTypeTrees");
+			sw.WriteLine($"TypeTree SerializeTypeTrees {SerializeTypeTrees}");
+			var Unknown = Util.GetMember<int>(hierarchy, "Unknown");
+			sw.WriteLine($"TypeTree Unknown {Unknown}");
+			sw.WriteLine($"");
+			var types = Util.GetMember<IReadOnlyList<object>>(hierarchy, "Types");
+			foreach (var type in types)
+			{
+				var ClassID = Util.GetMember< ClassIDType > (type, "ClassID");
+				var ScriptID = Util.GetMember<short >(type, "ScriptID");
+				var IsStrippedType = Util.GetMember<bool>(type, "IsStrippedType");
+				var Tree = Util.GetMember<object>(type, "Tree");
+				var ScriptHash = Util.GetMember<Hash128>(type, "ScriptHash");
+				var TypeHash = Util.GetMember<Hash128>(type, "TypeHash");
+
+				var monoScript = serializedFile.FetchAssets().FirstOrDefault(asset => asset is MonoScript ms && CompareHash(ms.PropertiesHash, TypeHash)) as MonoScript;
+				string scriptType = monoScript == null ? "\tNo Script" : $"\tMonoScript is [{monoScript.AssemblyName}]{monoScript.Namespace}.{monoScript.ClassName}";
+				sw.WriteLine(scriptType);
+				sw.WriteLine($"\tType: ClassID {ClassID}, ScriptID {ScriptID}, IsStrippedType {IsStrippedType}, ScriptHash {HashToString(ScriptHash)}, TypeHash {HashToString(TypeHash)}");
+				var Dump = Util.GetMember<string>(Tree, "Dump");
+				sw.WriteLine($"\t{Dump}");
+				sw.WriteLine($"");
+			}
+			sw.WriteLine($"");
 		}
 	}
 }

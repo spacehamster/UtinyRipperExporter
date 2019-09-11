@@ -56,5 +56,7 @@ namespace Extract
 		public ShaderExportMode ShaderExportMode { get; set; }
 		[Option("condenseshadersubprograms", Default = false, Required = false, HelpText = "Condense the number of shader subprograms that are exported")]
 		public bool CondenseShaderSubprograms { get; set; }
+		[Option("exportversion", Required = false, HelpText = "Set the export version. Default is the game's version.")]
+		public string ExportVersion { get; set; }
 	}
 }

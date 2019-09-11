@@ -26,13 +26,11 @@ namespace Extract
 			| BindingFlags.SetProperty;
 		public static void PrepareExportDirectory(string path)
 		{
-			if (Directory.Exists(path))
-			{
-				DeleteDirectory(path);
-			}
+			DeleteDirectory(path);
 		}
 		public static void DeleteDirectory(string path)
 		{
+			if (!Directory.Exists(path)) return;
 			foreach (string directory in Directory.GetDirectories(path))
 			{
 				Thread.Sleep(1);
