@@ -35,6 +35,10 @@ namespace Extract
 
 			if (string.IsNullOrEmpty(settings.ExportVersion))
 			{
+				options.Version = new Version(2017, 3, 0, VersionType.Final, 3);
+			}
+			else if (settings.ExportVersion.ToLower() == "detect")
+			{
 				//The version in unity default resources and unity_builtin_extra seem to differ from the game version
 				var versionCheckFile = GameStructure.FileCollection.Files.FirstOrDefault(f => !Path.GetFileName(f.Name).Contains("unity"));
 				if (versionCheckFile != null)
@@ -45,13 +49,14 @@ namespace Extract
 				else
 				{
 					Logger.Log(LogType.Warning, LogCategory.Export, $"Could not detect version");
+					options.Version = new Version(2017, 3, 0, VersionType.Final, 3);
 				}
 			}
 			else
 			{
-				var version = new Version();
-				version.Parse(settings.ExportVersion);
-				Logger.Log(LogType.Info, LogCategory.Export, $"Version set to {version.ToString()}");
+				options.Version = new Version();
+				options.Version.Parse(settings.ExportVersion);
+				Logger.Log(LogType.Info, LogCategory.Export, $"Version set to {options.Version.ToString()}");
 			}
 			if (filter != null)
 			{
