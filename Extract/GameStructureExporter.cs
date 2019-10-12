@@ -71,7 +71,7 @@ namespace Extract
 			var engineExporter = new EngineAssetExporter();
 			fileCollection.Exporter.OverrideExporter(ClassIDType.Material, engineExporter);
 			fileCollection.Exporter.OverrideExporter(ClassIDType.Mesh, engineExporter);
-			fileCollection.Exporter.OverrideExporter(ClassIDType.Shader, new CustomShaderAssetExporter());
+			fileCollection.Exporter.OverrideExporter(ClassIDType.Shader, new CustomShaderAssetExporter(settings));
 			fileCollection.Exporter.OverrideExporter(ClassIDType.TextAsset, new TextAssetExporter());
 			fileCollection.Exporter.OverrideExporter(ClassIDType.AudioClip, new AudioAssetExporter());
 			fileCollection.Exporter.OverrideExporter(ClassIDType.Font, new FontAssetExporter());
@@ -159,7 +159,7 @@ namespace Extract
 				var file = Util.FindFile(GameStructure.FileCollection, path);
 				requestedFiles.Add(file);
 			}
-			var assets = GameStructure.FileCollection.FetchAssets().Where((obj) => true || requestedFiles.Contains(obj.File) && Filter(obj));
+			var assets = GameStructure.FileCollection.FetchAssets().Where((obj) => requestedFiles.Contains(obj.File) && Filter(obj));
 			GameStructure.FileCollection.Exporter.Export(ExportPath,
 				GameStructure.FileCollection,
 				assets,
@@ -176,9 +176,11 @@ namespace Extract
 				lastUpdate = now;
 			}
 		}
-		public static void ExportGameStructure(ExportSettings settings, Func<uTinyRipper.Classes.Object, bool> filter = null)
+		public static void ExportGameStructure(ExportSettings settings, Func<uTinyRipper.Classes.Object, bool> filter = null, List<string> extraFiles = null)
 		{
-			new GameStructureExporter(settings, new List<string>() { settings.GameDir }, filter).Export();
+			var files = new List<string>() { settings.GameDir };
+			if (extraFiles != null) files.AddRange(extraFiles);
+			new GameStructureExporter(settings, files, filter).Export();
 		}
 		public static string ResolveBundleDepndency(string gameDir, string manifestPath, string bundleName)
 		{

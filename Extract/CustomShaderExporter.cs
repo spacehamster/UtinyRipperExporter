@@ -174,17 +174,20 @@ namespace Extract
 				if (FilterSubPrograms)
 				{
 					var best = serializedProgram.SubPrograms
-					.OrderByDescending(subProgram =>
-					{
-						GPUPlatform platform = subProgram.GpuProgramType.ToGPUPlatform(writer.Platform);
-						int index = writer.Shader.Platforms.IndexOf(platform);
-						ShaderSubProgramBlob blob = writer.Shader.SubProgramBlobs[index];
-						var sp = blob.SubPrograms[(int)subProgram.BlobIndex];
-						return sp.ProgramData.Count;
-										//return sp.GlobalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
+						.OrderByDescending(subProgram =>
+						{
+							GPUPlatform platform = subProgram.GpuProgramType.ToGPUPlatform(writer.Platform);
+							int index = writer.Shader.Platforms.IndexOf(platform);
+							ShaderSubProgramBlob blob = writer.Shader.SubProgramBlobs[index];
+							var sp = blob.SubPrograms[(int)subProgram.BlobIndex];
+							return sp.ProgramData.Count;
+											//return sp.GlobalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
 					}).FirstOrDefault();
 					subprograms = new SerializedSubProgram[] { best };
 				}
+#if DEBUG
+				ExportSubprogramInfo(serializedProgram, writer, type);
+#endif
 				foreach (SerializedSubProgram subProgram in subprograms)
 				{
 					Platform uplatform = writer.Platform;
@@ -198,7 +201,6 @@ namespace Extract
 				writer.Write("}\n");
 			}
 		}
-
 		void ExportSerializedSubProgram(SerializedSubProgram subProgram, ShaderWriter writer, ShaderSubProgramBlob blob, ShaderType type, bool isTier)
 		{
 			writer.WriteIndent(4);
@@ -211,10 +213,6 @@ namespace Extract
 			writer.WriteIndent(5);
 
 			var shaderSubProgram = blob.SubPrograms[(int)subProgram.BlobIndex];
-			string hash = Hash(shaderSubProgram.ProgramData.ToArray());
-			var filesteam = writer.BaseStream as FileStream;
-			var folder = Path.GetDirectoryName(filesteam.Name);
-
 			ExportShaderSubProgram(shaderSubProgram, writer, type);
 
 			writer.Write('\n');
@@ -315,6 +313,80 @@ namespace Extract
 				else
 				{
 					writer.WriteLine($"//Error with {name} {shader.OK}");
+				}
+			}
+		}
+		void ExportSubprogramInfo(SerializedProgram serializedProgram, ShaderWriter writer, ShaderType type)
+		{
+	
+			var longest = serializedProgram.SubPrograms
+				.Select(subProgram =>
+				{
+					GPUPlatform platform = subProgram.GpuProgramType.ToGPUPlatform(writer.Platform);
+					int index = writer.Shader.Platforms.IndexOf(platform);
+					ShaderSubProgramBlob blob = writer.Shader.SubProgramBlobs[index];
+					var sp = blob.SubPrograms[(int)subProgram.BlobIndex];
+					return sp.ProgramData.Count;
+					//return sp.GlobalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
+				}).Max();
+			var bestKeywords = serializedProgram.SubPrograms
+				.Select(subProgram =>
+				{
+					GPUPlatform platform = subProgram.GpuProgramType.ToGPUPlatform(writer.Platform);
+					int index = writer.Shader.Platforms.IndexOf(platform);
+					ShaderSubProgramBlob blob = writer.Shader.SubProgramBlobs[index];
+					var sp = blob.SubPrograms[(int)subProgram.BlobIndex];
+					return sp.GlobalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
+				}).Max();
+			var mostParamters = serializedProgram.SubPrograms
+			.Select(subProgram =>
+			{
+				GPUPlatform platform = subProgram.GpuProgramType.ToGPUPlatform(writer.Platform);
+				int index = writer.Shader.Platforms.IndexOf(platform);
+				ShaderSubProgramBlob blob = writer.Shader.SubProgramBlobs[index];
+				var sp = blob.SubPrograms[(int)subProgram.BlobIndex];
+				int parameterCount = 0;
+				foreach(var constantBuffer in sp.ConstantBuffers)
+				{
+					parameterCount += constantBuffer.MatrixParams.Count;
+					parameterCount += constantBuffer.VectorParams.Count;
+					parameterCount += constantBuffer.StructParams.Count;
+				}
+				return parameterCount;
+			}).Max();
+			var subprograms = serializedProgram.SubPrograms;
+			HashSet<ShaderGpuProgramType> isTierLookup = GetIsTierLookup(serializedProgram.SubPrograms);
+
+			var filesteam = writer.BaseStream as FileStream;
+			var folder = Path.GetDirectoryName(filesteam.Name);
+			var name = Path.GetFileNameWithoutExtension(filesteam.Name);
+			using (var sw = new StreamWriter($"{folder}/{name}_{type.ToProgramTypeString()}.info"))
+			{
+				foreach (SerializedSubProgram subProgram in subprograms)
+				{
+					Platform uplatform = writer.Platform;
+					GPUPlatform platform = subProgram.GpuProgramType.ToGPUPlatform(uplatform);
+					int index = writer.Shader.Platforms.IndexOf(platform);
+					ShaderSubProgramBlob blob = writer.Shader.SubProgramBlobs[index];
+					bool isTier = isTierLookup.Contains(subProgram.GpuProgramType);
+					var shaderSubProgram = blob.SubPrograms[(int)subProgram.BlobIndex];
+
+
+					int parameterCount = 0;
+					foreach (var constantBuffer in shaderSubProgram.ConstantBuffers)
+					{
+						parameterCount += constantBuffer.MatrixParams.Count;
+						parameterCount += constantBuffer.VectorParams.Count;
+						parameterCount += constantBuffer.StructParams.Count;
+					}
+					var keywords = string.Join(", ", shaderSubProgram.GlobalKeywords);
+					string hash = Hash(shaderSubProgram.ProgramData.ToArray());
+					var keywordScore = shaderSubProgram.GlobalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
+					var scoreText = keywordScore == bestKeywords ? "BestKeywords " : "";
+					var lengthText = shaderSubProgram.ProgramData.Count == longest ? "LongestShader " : "";
+					var paramText = parameterCount == mostParamters ? "MostParameters" : "";
+					sw.WriteLine($"{hash} length {shaderSubProgram.ProgramData.Count} keywordscore {keywordScore} Paramters {parameterCount} {keywords} {scoreText}{lengthText}{paramText}");
+
 				}
 			}
 		}

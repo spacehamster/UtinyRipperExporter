@@ -40,6 +40,14 @@ namespace Extract
 		{
 			writer.Write("/*HelloWorld*/");
 		}
+		public static bool IsSerialized(Version version)
+		{
+			return version.IsGreaterEqual(5, 5);
+		}
+		public static bool IsEncoded(Version version)
+		{
+			return version.IsGreaterEqual(5, 3);
+		}
 		public static void ExportShader(Shader shader, IExportContainer container, Stream stream,
 			Func<Version, GPUPlatform, ShaderTextExporter> exporterInstantiator)
 		{
@@ -68,7 +76,29 @@ namespace Extract
 			}
 			else
 			{
-				shader.ExportBinary(container, stream, exporterInstantiator);
+				if (IsSerialized(container.Version))
+				{
+					using (ShaderWriter writer = new ShaderWriter(stream, shader, exporterInstantiator))
+					{
+						shader.ParsedForm.Export(writer);
+					}
+				}
+				else if (IsEncoded(container.Version))
+				{
+					using (ShaderWriter writer = new ShaderWriter(stream, shader, exporterInstantiator))
+					{
+						string header = Encoding.UTF8.GetString(shader.Script);
+						var subshaderIndex = header.IndexOf("SubShader");
+						writer.WriteString(header, 0, subshaderIndex);
+						writer.WriteIndent(1);
+						writer.Write(DummyShader);
+						writer.Write('}');
+					}
+				}
+				else
+				{
+					shader.ExportBinary(container, stream);
+				}
 			}
 		}
 	}
