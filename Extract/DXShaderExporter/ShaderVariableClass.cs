@@ -1,4 +1,4 @@
-﻿namespace DXShaderExporter
+﻿namespace ExtractDXShaderExporter
 {
 	internal enum ShaderVariableClass
 	{

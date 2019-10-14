@@ -3,7 +3,7 @@ using System.Text;
 using uTinyRipper;
 using uTinyRipper.Classes.Shaders;
 
-namespace DXShaderExporter
+namespace ExtractDXShaderExporter
 {
 	internal class ResourceChunk
 	{

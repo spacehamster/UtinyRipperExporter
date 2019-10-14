@@ -272,7 +272,7 @@ namespace Extract
 					default:
 						writer.WriteShaderData(
 							subProgram.ProgramType.ToGPUPlatform(writer.Platform),
-							subProgram.ProgramData.ToArray());
+							subProgram);
 						break;
 				}
 
@@ -296,7 +296,7 @@ namespace Extract
 			writer.WriteIndent(5);
 			if (!File.Exists(glslPath))
 			{
-				var data = DXShaderExporter.DXShaderObjectExporter.GetObjectData(writer.Version, subProgram.ProgramType.ToGPUPlatform(writer.Platform), subProgram);
+				var data = ExtractDXShaderExporter.DXShaderObjectExporter.GetObjectData(writer.Version, subProgram.ProgramType.ToGPUPlatform(writer.Platform), subProgram);
 
 				var ext = new HLSLccWrapper.WrappedGlExtensions();
 				ext.ARB_explicit_attrib_location = 1;

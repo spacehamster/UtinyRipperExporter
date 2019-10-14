@@ -188,29 +188,11 @@
     <Compile Include="ScriptFixer.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
-  <!--<ItemGroup>
-    <Compile Include="..\..\UtinyRipper\uTinyRipperGUI\ThirdParty\D3DCompiler\D3DCompiler.cs" />
-    <Compile Include="..\..\UtinyRipper\uTinyRipperGUI\ThirdParty\D3DCompiler\DotNetDxc.cs" />
-    <Compile Include="..\..\UtinyRipper\uTinyRipperGUI\ThirdParty\FMOD Studio API\fmod.cs" />
-    <Compile Include="..\..\UtinyRipper\uTinyRipperGUI\ThirdParty\FMOD Studio API\fmod_dsp.cs" />
-    <Compile Include="..\..\UtinyRipper\uTinyRipperGUI\ThirdParty\FMOD Studio API\fmod_errors.cs" />
-    <Compile Include="..\..\UtinyRipper\uTinyRipperGUI\Exporters\Audio\AudioAssetExporter.cs" />
-    <Compile Include="..\..\UtinyRipper\uTinyRipperGUI\Exporters\Audio\AudioExportCollection.cs" />
-    <Compile Include="..\..\UtinyRipper\uTinyRipperGUI\Exporters\Shader\ShaderAssetExporter.cs" />
-    <Compile Include="..\..\UtinyRipper\uTinyRipperGUI\Exporters\Shader\ShaderDXExporter.cs" />
-    <Compile Include="..\..\UtinyRipper\uTinyRipperGUI\Exporters\Texture\QFORMAT.cs" />
-    <Compile Include="..\..\UtinyRipper\uTinyRipperGUI\Exporters\Texture\TexgenpackTexturetype.cs" />
-    <Compile Include="..\..\UtinyRipper\uTinyRipperGUI\Exporters\Texture\TextureAssetExporter.cs" />
-  </ItemGroup>-->
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\HLSLccWrapper\HLSLccWrapper.vcxproj">
-      <Project>{b812e249-4f57-4c35-b5a8-a8ec498627f9}</Project>
-      <Name>HLSLccWrapper</Name>
-    </ProjectReference>
     <ProjectReference Include="..\uTinyRipperUtility\uTinyRipperUtility.csproj">
       <Project>{6e5eec59-3ea9-4aca-bfa5-ddd9b497cac8}</Project>
       <Name>uTinyRipperUtility</Name>
@@ -232,81 +214,17 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <!--<ItemGroup Condition=" '$(Platform)' == 'x86' ">
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x86\astcenc_x86.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>astcenc.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x86\crunch_x86.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>crunch.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x86\crunchunity_x86.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>crunchunity.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x86\fmod_x86.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>fmod.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x86\PVRTexLib.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>PVRTexLib.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x86\PVRTexLibWrapper_x86.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>PVRTexLibWrapper.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x86\texgenpack_x86.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>texgenpack.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x86\TextureConverter.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>TextureConverter.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x86\TextureConverterWrapper_x86.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>TextureConverterWrapper.dll</TargetPath>
-    </ContentWithTargetPath>
+  <ItemGroup Condition="'$(Platform)' == 'x86'">
+    <Reference Include="HLSLccWrapper_x86, processorArchitecture=x86">
+     <SpecificVersion>False</SpecificVersion>
+     <HintPath>..\Libs\HLSLccWrapper_x86.dll</HintPath>
+    </Reference>
   </ItemGroup>
-  <ItemGroup Condition=" '$(Platform)' == 'x64' ">
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x64\astcenc_x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>astcenc.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x64\crunch_x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>crunch.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x64\crunchunity_x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>crunchunity.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x64\fmod_x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>fmod.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x64\PVRTexLib.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>PVRTexLib.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x64\PVRTexLibWrapper_x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>PVRTexLibWrapper.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x64\texgenpack_x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>texgenpack.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x64\TextureConverter.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>TextureConverter.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\..\UtinyRipper\uTinyRipperGUI\Libraries\x64\TextureConverterWrapper_x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>TextureConverterWrapper.dll</TargetPath>
-    </ContentWithTargetPath>
-  </ItemGroup>-->
+  <ItemGroup Condition="'$(Platform)' == 'x64'">
+    <Reference Include="HLSLccWrapper_x64, processorArchitecture=x64">
+     <SpecificVersion>False</SpecificVersion>
+     <HintPath>..\Libs\HLSLccWrapper_x64.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

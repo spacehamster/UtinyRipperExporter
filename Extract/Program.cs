@@ -17,7 +17,7 @@ namespace Extract
 				{
 					Config.IsGenerateGUIDByContent = o.GUIDByContent;
 					Config.IsExportDependencies = o.ExportDependencies;
-					Config.IsExportScriptsAsPublic = o.PublicScripts;
+					//Config.IsExportScriptsAsPublic = o.PublicScripts;
 					if (o.ExportScripts)
 					{
 						ScriptExporter.ExportAll(o.GameDir, o.ExportDir, o.ScriptByName);

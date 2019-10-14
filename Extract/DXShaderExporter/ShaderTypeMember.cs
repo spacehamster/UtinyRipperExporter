@@ -1,6 +1,6 @@
 ﻿using uTinyRipper.Classes.Shaders;
 
-namespace DXShaderExporter
+namespace ExtractDXShaderExporter
 {
 	class ShaderTypeMember
 	{

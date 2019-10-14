@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using uTinyRipper;
 using uTinyRipper.Classes.Shaders;
 
-namespace DXShaderExporter
+namespace ExtractDXShaderExporter
 {
 	internal class ConstantBufferChunk
 	{

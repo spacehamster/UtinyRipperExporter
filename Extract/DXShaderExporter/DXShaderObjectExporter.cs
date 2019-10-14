@@ -9,7 +9,7 @@ using uTinyRipper;
 using uTinyRipper.Classes.Shaders;
 using Version = uTinyRipper.Version;
 
-namespace DXShaderExporter
+namespace ExtractDXShaderExporter
 {
 	public class DXShaderObjectExporter
 	{

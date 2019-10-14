@@ -199,5 +199,17 @@
       <Name>uTinyRipperCore</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup Condition="'$(Platform)' == 'x86'">
+    <Reference Include="HLSLccWrapper_x86, processorArchitecture=x86">
+     <SpecificVersion>False</SpecificVersion>
+     <HintPath>..\Libs\HLSLccWrapper_x86.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Platform)' == 'x64'">
+    <Reference Include="HLSLccWrapper_x64, processorArchitecture=x64">
+     <SpecificVersion>False</SpecificVersion>
+     <HintPath>..\Libs\HLSLccWrapper_x64.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -77,6 +77,7 @@ namespace Extract
 			fileCollection.Exporter.OverrideExporter(ClassIDType.Font, new FontAssetExporter());
 			fileCollection.Exporter.OverrideExporter(ClassIDType.MovieTexture, new MovieTextureAssetExporter());
 			fileCollection.Exporter.OverrideExporter(ClassIDType.Texture2D, textureExporter);
+			fileCollection.Exporter.OverrideExporter(ClassIDType.Texture2D, textureExporter);
 			fileCollection.Exporter.OverrideExporter(ClassIDType.Cubemap, textureExporter);
 			fileCollection.Exporter.OverrideExporter(ClassIDType.Sprite, engineExporter); //engine or texture exporter?
 			fileCollection.Exporter.EventExportStarted += () =>

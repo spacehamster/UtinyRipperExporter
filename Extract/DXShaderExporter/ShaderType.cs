@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using uTinyRipper.Classes.Shaders;
 
-namespace DXShaderExporter
+namespace ExtractDXShaderExporter
 {
 	internal class ShaderType
 	{
