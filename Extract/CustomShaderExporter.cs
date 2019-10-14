@@ -270,9 +270,10 @@ namespace Extract
 						ExportGLSL(subProgram, writer);
 						break;
 					default:
-						writer.WriteShaderData(
-							subProgram.ProgramType.ToGPUPlatform(writer.Platform),
-							subProgram);
+
+						var exporter = Util.GetMember<Func<Version, GPUPlatform, ShaderTextExporter>>(writer, "m_exporterInstantiator")
+							.Invoke(writer.Shader.File.Version, subProgram.ProgramType.ToGPUPlatform(writer.Platform));
+						exporter.Export(subProgram.ProgramData.ToArray(), writer);
 						break;
 				}
 
