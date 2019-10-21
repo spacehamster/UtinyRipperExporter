@@ -22,7 +22,7 @@ namespace ExtractDXShaderExporter
 			this.contantBufferOffset = contantBufferOffset;
 			this.nameLookup = nameLookup;
 
-			uint headerSize = (uint)shaderSubprogram.ConstantBuffers.Count * 24;
+			uint headerSize = (uint)shaderSubprogram.ConstantBuffers.Length * 24;
 			uint variableOffset = contantBufferOffset + headerSize;
 			variables = new List<VariableChunk>();
 			int constantBufferIndex = 0;
@@ -36,13 +36,13 @@ namespace ExtractDXShaderExporter
 		}
 		internal uint Size => size;
 
-		internal uint Count => (uint)shaderSubprogram.ConstantBuffers.Count;
+		internal uint Count => (uint)shaderSubprogram.ConstantBuffers.Length;
 
 		internal void Write(EndianWriter writer)
 		{
-			uint headerSize = (uint)shaderSubprogram.ConstantBuffers.Count * 24;
+			uint headerSize = (uint)shaderSubprogram.ConstantBuffers.Length * 24;
 			uint variableOffset = contantBufferOffset + headerSize;
-			for(int i = 0; i < shaderSubprogram.ConstantBuffers.Count; i++)
+			for(int i = 0; i < shaderSubprogram.ConstantBuffers.Length; i++)
 			{
 				var constantBuffer = shaderSubprogram.ConstantBuffers[i];
 				var variableChunk = variables[i];

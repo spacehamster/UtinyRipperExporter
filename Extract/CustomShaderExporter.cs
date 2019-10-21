@@ -39,6 +39,7 @@ namespace Extract
 			{
 				using (ShaderWriter writer = new ShaderWriter(stream, shader, exporterInstantiator))
 				{
+					writer.Write("/*ParsedForm*/\n");
 					ExportParsedForm(shader.ParsedForm, writer);
 				}
 			}
@@ -46,15 +47,21 @@ namespace Extract
 			{
 				using (ShaderWriter writer = new ShaderWriter(stream, shader, exporterInstantiator))
 				{
+					writer.Write("/*Encoded*/\n");
 					string header = Encoding.UTF8.GetString(shader.Script);
 					shader.SubProgramBlob.Export(writer, header);
 				}
 			}
 			else
 			{
+
 				var bytes = Encoding.ASCII.GetBytes("/*Default*/\n");
 				stream.Write(bytes, 0, bytes.Length);
-				shader.ExportBinary(container, stream);
+				using (BinaryWriter writer = new BinaryWriter(stream))
+				{
+					writer.Write("/*ScriptForm*/\n");
+					writer.Write(shader.Script);
+				}
 			}
 		}
 		//See ParsedForm.Export
@@ -180,8 +187,8 @@ namespace Extract
 							int index = writer.Shader.Platforms.IndexOf(platform);
 							ShaderSubProgramBlob blob = writer.Shader.SubProgramBlobs[index];
 							var sp = blob.SubPrograms[(int)subProgram.BlobIndex];
-							return sp.ProgramData.Count;
-											//return sp.GlobalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
+							return sp.ProgramData.Length;
+							//return sp.GlobalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
 					}).FirstOrDefault();
 					subprograms = new SerializedSubProgram[] { best };
 				}
@@ -239,7 +246,7 @@ namespace Extract
 		//Refer ShaderSubProgram.Export
 		void ExportShaderSubProgram(ShaderSubProgram subProgram, ShaderWriter writer, ShaderType type)
 		{
-			if (subProgram.GlobalKeywords.Count > 0)
+			if (subProgram.GlobalKeywords.Length > 0)
 			{
 				writer.Write("Keywords { ");
 				foreach (string keyword in subProgram.GlobalKeywords)
@@ -258,7 +265,7 @@ namespace Extract
 			}
 
 			writer.Write("\"!!{0}", subProgram.ProgramType.ToShaderName(writer.Platform, type));
-			if (subProgram.ProgramData.Count > 0)
+			if (subProgram.ProgramData.Length > 0)
 			{
 				writer.Write("\n");
 				writer.WriteIndent(5);
@@ -273,7 +280,7 @@ namespace Extract
 
 						var exporter = Util.GetMember<Func<Version, GPUPlatform, ShaderTextExporter>>(writer, "m_exporterInstantiator")
 							.Invoke(writer.Shader.File.Version, subProgram.ProgramType.ToGPUPlatform(writer.Platform));
-						exporter.Export(subProgram.ProgramData.ToArray(), writer);
+						exporter.Export(writer, ref subProgram);
 						break;
 				}
 
@@ -327,7 +334,7 @@ namespace Extract
 					int index = writer.Shader.Platforms.IndexOf(platform);
 					ShaderSubProgramBlob blob = writer.Shader.SubProgramBlobs[index];
 					var sp = blob.SubPrograms[(int)subProgram.BlobIndex];
-					return sp.ProgramData.Count;
+					return sp.ProgramData.Length;
 					//return sp.GlobalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
 				}).Max();
 			var bestKeywords = serializedProgram.SubPrograms
@@ -384,9 +391,9 @@ namespace Extract
 					string hash = Hash(shaderSubProgram.ProgramData.ToArray());
 					var keywordScore = shaderSubProgram.GlobalKeywords.Sum(keyword => keyword.Contains("ON") ? 2 : 1);
 					var scoreText = keywordScore == bestKeywords ? "BestKeywords " : "";
-					var lengthText = shaderSubProgram.ProgramData.Count == longest ? "LongestShader " : "";
+					var lengthText = shaderSubProgram.ProgramData.Length == longest ? "LongestShader " : "";
 					var paramText = parameterCount == mostParamters ? "MostParameters" : "";
-					sw.WriteLine($"{hash} length {shaderSubProgram.ProgramData.Count} keywordscore {keywordScore} Paramters {parameterCount} {keywords} {scoreText}{lengthText}{paramText}");
+					sw.WriteLine($"{hash} length {shaderSubProgram.ProgramData.Length} keywordscore {keywordScore} Paramters {parameterCount} {keywords} {scoreText}{lengthText}{paramText}");
 
 				}
 			}

@@ -41,9 +41,9 @@ namespace ExtractDXShaderExporter
 		}
 
 		internal uint Size => size;
-		internal uint Count => (uint)shaderSubprogram.ConstantBuffers.Count +
-			(uint)shaderSubprogram.TextureParameters.Count * 2 +
-			(uint)shaderSubprogram.BufferParameters.Count;
+		internal uint Count => (uint)shaderSubprogram.ConstantBuffers.Length +
+			(uint)shaderSubprogram.TextureParameters.Length * 2 +
+			(uint)shaderSubprogram.BufferParameters.Length;
 
 		internal void Write(EndianWriter writer)
 		{

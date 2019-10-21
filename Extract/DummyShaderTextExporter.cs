@@ -36,10 +36,11 @@ namespace Extract
 		ENDCG
 	}
 ";
-		public override void Export(byte[] shaderData, TextWriter writer)
+		public override void Export(ShaderWriter writer, ref ShaderSubProgram subProgram)
 		{
 			writer.Write("/*HelloWorld*/");
 		}
+
 		public static bool IsSerialized(Version version)
 		{
 			return version.IsGreaterEqual(5, 5);

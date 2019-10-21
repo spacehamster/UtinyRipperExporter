@@ -21,8 +21,7 @@ namespace Extract
 		ExportOptions options;
 		public GameStructure GameStructure = null;
 		HashSet<string> m_LoadedFiles = new HashSet<string>();
-		Func<uTinyRipper.Classes.Object, bool> Filter;
-		public GameStructureExporter(ExportSettings settings, List<string> files, Func<uTinyRipper.Classes.Object, bool> filter = null)
+		public GameStructureExporter(ExportSettings settings, IEnumerable<string> files)
 		{
 			GameDir = settings.GameDir;
 			ExportPath = settings.ExportDir;
@@ -58,14 +57,6 @@ namespace Extract
 				options.Version.Parse(settings.ExportVersion);
 				Logger.Log(LogType.Info, LogCategory.Export, $"Version set to {options.Version.ToString()}");
 			}
-			if (filter != null)
-			{
-				Filter = filter;
-			}
-			else
-			{
-				Filter = (obj) => true;
-			}
 			var fileCollection = GameStructure.FileCollection;
 			var textureExporter = new TextureAssetExporter();
 			var engineExporter = new EngineAssetExporter();
@@ -76,8 +67,8 @@ namespace Extract
 			fileCollection.Exporter.OverrideExporter(ClassIDType.AudioClip, new AudioAssetExporter());
 			fileCollection.Exporter.OverrideExporter(ClassIDType.Font, new FontAssetExporter());
 			fileCollection.Exporter.OverrideExporter(ClassIDType.MovieTexture, new MovieTextureAssetExporter());
-			fileCollection.Exporter.OverrideExporter(ClassIDType.Texture2D, textureExporter);
-			fileCollection.Exporter.OverrideExporter(ClassIDType.Texture2D, textureExporter);
+			fileCollection.Exporter.OverrideExporter(ClassIDType.Texture2D, engineExporter);
+			//fileCollection.Exporter.OverrideExporter(ClassIDType.Texture2D, textureExporter);
 			fileCollection.Exporter.OverrideExporter(ClassIDType.Cubemap, textureExporter);
 			fileCollection.Exporter.OverrideExporter(ClassIDType.Sprite, engineExporter); //engine or texture exporter?
 			fileCollection.Exporter.EventExportStarted += () =>
@@ -142,25 +133,33 @@ namespace Extract
 				}
 			}
 		}
-		public void Export()
+		public void Export(Func<uTinyRipper.Classes.Object, bool> filter = null)
 		{
 			Util.PrepareExportDirectory(ExportPath);
-			var assets = GameStructure.FileCollection.FetchAssets().Where(Filter);
+			if (filter == null)
+			{
+				filter = (obj) => true;
+			}
+			var assets = GameStructure.FileCollection.FetchAssets().Where(filter);
 			GameStructure.FileCollection.Exporter.Export(ExportPath,
 				GameStructure.FileCollection,
 				assets,
 				options);
 		}
-		private void ExportBundles(IEnumerable<string> requestedPaths)
+		public void ExportBundles(IEnumerable<string> requestedPaths, Func<uTinyRipper.Classes.Object, bool> filter = null)
 		{
 			Util.PrepareExportDirectory(ExportPath);
+			if (filter == null)
+			{
+				filter = (obj) => true;
+			}
 			var requestedFiles = new HashSet<ISerializedFile>();
 			foreach (var path in requestedPaths)
 			{
 				var file = Util.FindFile(GameStructure.FileCollection, path);
 				requestedFiles.Add(file);
 			}
-			var assets = GameStructure.FileCollection.FetchAssets().Where((obj) => requestedFiles.Contains(obj.File) && Filter(obj));
+			var assets = GameStructure.FileCollection.FetchAssets().Where((obj) => requestedFiles.Contains(obj.File) && filter(obj));
 			GameStructure.FileCollection.Exporter.Export(ExportPath,
 				GameStructure.FileCollection,
 				assets,
@@ -177,11 +176,17 @@ namespace Extract
 				lastUpdate = now;
 			}
 		}
-		public static void ExportGameStructure(ExportSettings settings, Func<uTinyRipper.Classes.Object, bool> filter = null, List<string> extraFiles = null)
+		public static void ExportGameStructure(ExportSettings settings, Func<uTinyRipper.Classes.Object, bool> filter = null, IEnumerable<string> extraFiles = null)
 		{
 			var files = new List<string>() { settings.GameDir };
 			if (extraFiles != null) files.AddRange(extraFiles);
-			new GameStructureExporter(settings, files, filter).Export();
+			new GameStructureExporter(settings, files).Export(filter);
+		}
+		public static GameStructureExporter Load(ExportSettings settings, IEnumerable<string> extraFiles = null)
+		{
+			var files = new List<string>() { settings.GameDir };
+			if (extraFiles != null) files.AddRange(extraFiles);
+			return new GameStructureExporter(settings, files);
 		}
 		public static string ResolveBundleDepndency(string gameDir, string manifestPath, string bundleName)
 		{
@@ -217,6 +222,24 @@ namespace Extract
 			}
 			return toExportHashSet.ToList();
 		}
+		public static GameStructureExporter LoadBundles(ExportSettings settings, IEnumerable<string> assetPaths, bool loadBundleDependencies = true)
+		{
+			var exportPath = settings.ExportDir;
+			var gameDir = settings.GameDir;
+			Util.PrepareExportDirectory(exportPath);
+			List<string> toExportList = null;
+			if (loadBundleDependencies)
+			{
+				toExportList = GetBundleDependencies(gameDir, assetPaths);
+			}
+			else
+			{
+				toExportList = assetPaths.ToList();
+			}
+			toExportList.Add($"{gameDir}/Managed");
+			Console.WriteLine($"Exporting Files:\n{string.Join("\n", toExportList)}");
+			return new GameStructureExporter(settings, toExportList);
+		}
 		public static void ExportBundles(ExportSettings settings, IEnumerable<string> assetPaths, bool loadBundleDependencies = true, Func<uTinyRipper.Classes.Object, bool> filter = null)
 		{
 			var exportPath = settings.ExportDir;
@@ -231,7 +254,7 @@ namespace Extract
 			}
 			toExportList.Add($"{gameDir}/Managed");
 			Console.WriteLine($"Exporting Files:\n{string.Join("\n", toExportList)}");
-			new GameStructureExporter(settings, toExportList, filter).ExportBundles(assetPaths);
+			new GameStructureExporter(settings, toExportList).ExportBundles(assetPaths, filter);
 		}
 	}
 }

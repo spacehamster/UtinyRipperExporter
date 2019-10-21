@@ -9,11 +9,12 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>uTinyRipperUtility</RootNamespace>
     <AssemblyName>uTinyRipperUtility</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <LangVersion>7.3</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -201,14 +202,14 @@
   </ItemGroup>
   <ItemGroup Condition="'$(Platform)' == 'x86'">
     <Reference Include="HLSLccWrapper_x86, processorArchitecture=x86">
-     <SpecificVersion>False</SpecificVersion>
-     <HintPath>..\Libs\HLSLccWrapper_x86.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\HLSLccWrapper_x86.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup Condition="'$(Platform)' == 'x64'">
     <Reference Include="HLSLccWrapper_x64, processorArchitecture=x64">
-     <SpecificVersion>False</SpecificVersion>
-     <HintPath>..\Libs\HLSLccWrapper_x64.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\HLSLccWrapper_x64.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -226,16 +226,12 @@ namespace Extract
 		{
 			foreach (var asset in assets)
 			{
-				var assetInfoField = typeof(uTinyRipper.Classes.Object).GetField("m_assetInfo", Util.AllBindingFlags);
-				var assetInfo = (AssetInfo)assetInfoField.GetValue(asset);
-				assetInfo.GUID = new EngineGUID(Guid.NewGuid());
+				asset.AssetInfo.GUID = new EngineGUID(Guid.NewGuid());
 			}
 		}
 		public static void SetGUID(uTinyRipper.Classes.Object asset, Guid guid)
 		{
-			var assetInfoField = typeof(uTinyRipper.Classes.Object).GetField("m_assetInfo", Util.AllBindingFlags);
-			var assetInfo = (AssetInfo)assetInfoField.GetValue(asset);
-			assetInfo.GUID = new EngineGUID(guid);
+			asset.AssetInfo.GUID = new EngineGUID(guid);
 		}
 	}
 }
