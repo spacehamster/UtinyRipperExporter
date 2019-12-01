@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using uTinyRipper;
-using uTinyRipper.AssetExporters;
 using uTinyRipper.Classes;
 using uTinyRipper.Classes.Shaders;
-using uTinyRipper.Classes.Shaders.Exporters;
+using uTinyRipper.Converters;
+using uTinyRipper.Converters.Shaders;
+using uTinyRipper.Project;
 using uTinyRipper.SerializedFiles;
 using uTinyRipperGUI.Exporters;
 using Object = uTinyRipper.Classes.Object;
@@ -45,11 +43,10 @@ namespace Extract
 				}
 				else if (settings.ShaderExportMode == ShaderExportMode.GLSL || settings.ShaderExportMode == ShaderExportMode.Metal)
 				{
-					var exporter = new CustomShaderExporter(settings.CondenseShaderSubprograms);
-					exporter.ExportShader(shader, container, fileStream, DefaultShaderExporterInstantiator);
+					shader.ExportBinary(container, fileStream, HLSLShaderExporterInstantiator);
 				} else if(settings.ShaderExportMode == ShaderExportMode.Asm)
 				{
-					shader.ExportBinary(container, fileStream, DXShaderExporterInstantiator);
+					shader.ExportBinary(container, fileStream, AssemblyShaderExporterInstantiator);
 				} else
 				{
 					shader.ExportBinary(container, fileStream, DefaultShaderExporterInstantiator);
@@ -103,14 +100,32 @@ namespace Extract
 					return Shader.DefaultShaderExporterInstantiator(version, graphicApi);
 			}
 		}
-		private static ShaderTextExporter DXShaderExporterInstantiator(Version version, GPUPlatform graphicApi)
+		private ShaderTextExporter AssemblyShaderExporterInstantiator(Version version, GPUPlatform graphicApi)
 		{
 			switch (graphicApi)
 			{
 				case GPUPlatform.d3d9:
 				case GPUPlatform.d3d11_9x:
 				case GPUPlatform.d3d11:
-					return new ShaderDXExporter(graphicApi);
+					return new AsmExporter(graphicApi);
+				case GPUPlatform.vulkan:
+					return new ShaderVulkanExporter();
+				default:
+					return Shader.DefaultShaderExporterInstantiator(version, graphicApi);
+			}
+		}
+		private ShaderTextExporter HLSLShaderExporterInstantiator(Version version, GPUPlatform graphicApi)
+		{
+			switch (graphicApi)
+			{
+				case GPUPlatform.d3d11:
+					var glLang = settings.ShaderExportMode == ShaderExportMode.Metal ?
+						HLSLccWrapper.WrappedGLLang.LANG_METAL :
+						HLSLccWrapper.WrappedGLLang.LANG_DEFAULT;
+					return new HLSLccExporter(graphicApi, glLang);
+				case GPUPlatform.d3d9:
+				case GPUPlatform.d3d11_9x:
+					return new AsmExporter(graphicApi);
 				case GPUPlatform.vulkan:
 					return new ShaderVulkanExporter();
 

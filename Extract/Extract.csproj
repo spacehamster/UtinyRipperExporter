@@ -156,36 +156,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CustomShaderAssetExporter.cs" />
-    <Compile Include="CustomShaderExporter.cs" />
-    <Compile Include="DummyShaderTextExporter.cs" />
+    <Compile Include="Shaders\AsmExporter.cs" />
+    <Compile Include="Shaders\CustomShaderAssetExporter.cs" />
+    <Compile Include="Shaders\CustomShaderTextExporter.cs" />
+    <Compile Include="Shaders\DummyShaderTextExporter.cs" />
     <Compile Include="ConsoleLogger.cs" />
     <Compile Include="DumpInfo.cs" />
-    <Compile Include="DXShaderExporter\ConstantBufferChunk.cs" />
-    <Compile Include="DXShaderExporter\ConstantBufferFlags.cs" />
-    <Compile Include="DXShaderExporter\ConstantBufferType.cs" />
-    <Compile Include="DXShaderExporter\DXProgramType.cs" />
-    <Compile Include="DXShaderExporter\DXShaderObjectExporter.cs" />
-    <Compile Include="DXShaderExporter\ResourceBindingChunk.cs" />
-    <Compile Include="DXShaderExporter\ResourceChunk.cs" />
-    <Compile Include="DXShaderExporter\ResourceReturnType.cs" />
-    <Compile Include="DXShaderExporter\ShaderFlags.cs" />
-    <Compile Include="DXShaderExporter\ShaderInputFlags.cs" />
-    <Compile Include="DXShaderExporter\ShaderInputType.cs" />
-    <Compile Include="DXShaderExporter\ShaderResourceViewDimension.cs" />
-    <Compile Include="DXShaderExporter\ShaderType.cs" />
-    <Compile Include="DXShaderExporter\ShaderTypeMember.cs" />
-    <Compile Include="DXShaderExporter\ShaderVariableClass.cs" />
-    <Compile Include="DXShaderExporter\ShaderVariableFlags.cs" />
-    <Compile Include="DXShaderExporter\ShaderVariableType.cs" />
-    <Compile Include="DXShaderExporter\Variable.cs" />
-    <Compile Include="DXShaderExporter\VariableChunk.cs" />
     <Compile Include="ExportSettings.cs" />
     <Compile Include="GameStructureExporter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScriptExporter.cs" />
     <Compile Include="ScriptFixer.cs" />
+    <Compile Include="Shaders\HLSLccExporter.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -216,14 +199,14 @@
   </ItemGroup>
   <ItemGroup Condition="'$(Platform)' == 'x86'">
     <Reference Include="HLSLccWrapper_x86, processorArchitecture=x86">
-     <SpecificVersion>False</SpecificVersion>
-     <HintPath>..\Libs\HLSLccWrapper_x86.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\HLSLccWrapper_x86.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup Condition="'$(Platform)' == 'x64'">
     <Reference Include="HLSLccWrapper_x64, processorArchitecture=x64">
-     <SpecificVersion>False</SpecificVersion>
-     <HintPath>..\Libs\HLSLccWrapper_x64.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\HLSLccWrapper_x64.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

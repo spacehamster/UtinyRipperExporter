@@ -1,18 +1,11 @@
-﻿using Extract;
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using uTinyRipper;
-using uTinyRipper.ArchiveFiles;
-using uTinyRipper.Assembly;
-using uTinyRipper.BundleFiles;
 using uTinyRipper.Classes;
-using uTinyRipper.ResourceFiles;
-using uTinyRipper.SerializedFiles;
-using uTinyRipper.WebFiles;
+using uTinyRipper.Classes.Misc;
 using Object = uTinyRipper.Classes.Object;
 
 namespace Extract
@@ -68,7 +61,7 @@ namespace Extract
 				sw.WriteLine($"ResourceFile count {fileList.ResourceFiles.Count}");
 				foreach (var resourceFile in fileList.ResourceFiles)
 				{
-					sw.WriteLine($"ResourceFile: Path {resourceFile.FilePath}, Name {resourceFile.Name}");
+					sw.WriteLine($"ResourceFile: Name {resourceFile.Name}");
 				}
 				sw.WriteLine($"");
 				sw.WriteLine($"SerializedFile count {fileList.SerializedFiles.Count}");
@@ -86,10 +79,10 @@ namespace Extract
 			sw.WriteLine("BundleFile");
 			var metadata = bundleFile.Metadata;
 			var header = bundleFile.Header;
-			sw.WriteLine("  Metadata: Entry.Key, Entry.Name, Entry.NameOrigin");
+			sw.WriteLine("  Metadata: Entry.BlobIndex, Entry.Name, Entry.NameOrigin");
 			foreach (var entry in metadata.Entries)
 			{
-				sw.WriteLine($"	{entry.Key}, {entry.Value.Name}, {entry.Value.NameOrigin}");
+				sw.WriteLine($"	{entry.BlobIndex}, {entry.Name}, {entry.NameOrigin}");
 			}
 			sw.WriteLine("  Header");
 			sw.WriteLine($"	EngineVersion: {header.EngineVersion}");
@@ -99,7 +92,8 @@ namespace Extract
 		}
 		static void DumpObjectInfo(IEnumerable<Object> objects, StreamWriter sw)
 		{
-			sw.WriteLine("Name, ClassID, GUID, FileIndex, PathID, asset.IsValid, Exporter");
+			sw.WriteLine("{0,-40}, {1,15}, {2,-32}, {3}, {4}, {5}, {6}",
+				"Name", "ClassID", "GUID", "FileIndex", "PathID", "IsValid", "Extra");
 			foreach (var asset in objects)
 			{
 				var name = Util.GetName(asset);
@@ -112,7 +106,7 @@ namespace Extract
 					scriptName += $"{ms.ClassName}:{HashToString(ms.PropertiesHash)}";
 					extra = scriptName;
 				}
-				sw.WriteLine($"{name}, {asset.ClassID}, {asset.GUID}, {pptr.FileIndex}, {asset.PathID}, {asset.IsValid},{extra}");
+				sw.WriteLine($"{name,-40}, {asset.ClassID,15}, {asset.GUID}, {pptr.FileIndex,9}, {asset.PathID,6}, {extra}");
 			}
 		}
 		static void UnknownFileType(object file, string filepath, string exportPath)
@@ -152,18 +146,23 @@ namespace Extract
 				sw.WriteLine($"	  Dependency.FilePath: {dep.FilePath}");
 				sw.WriteLine($"	  Dependency.FilePathOrigin: {dep.FilePathOrigin}");
 			}
-			if (container.Metadata.Hierarchy != null)
+			if (container.Metadata != null)
 			{
-				var SerializeTypeTrees = Util.GetMember<bool>(container.Metadata.Hierarchy, "SerializeTypeTrees");
-				var Types = Util.GetMember<IReadOnlyList<object>>(container.Metadata.Hierarchy, "Types");
-				var Name = Util.GetMember<string>(container.Metadata.Hierarchy, "Name");
+				var SerializeTypeTrees = container.Metadata.Hierarchy.SerializeTypeTrees;
+				var Types = container.Metadata.Hierarchy.Types;
+				var Version = container.Metadata.Hierarchy.Version;
+				var Platform = container.Metadata.Hierarchy.Platform;
+				var Unknown = container.Metadata.Hierarchy.Unknown;
 				sw.WriteLine($"	File.Metadata.Hierarchy:");
-				sw.WriteLine($"		Hierarchy.Name: {Name}");
+				sw.WriteLine($"		Hierarchy.Version: {Version}");
+				sw.WriteLine($"		Hierarchy.Platform: {Platform}");
 				sw.WriteLine($"		Hierarchy.SerializeTypeTrees: {SerializeTypeTrees}");
-				sw.WriteLine($"		Hierarchy.Types: {Types.Count}");
-				if (Types.Count > 0)
+				sw.WriteLine($"		Hierarchy.Unknown: {Unknown}");
+				sw.WriteLine($"		Hierarchy.Types: {Types.Length}");
+				if (Types.Length > 0)
 				{
-					sw.WriteLine($"			ClassID, IsStrippedType, ScriptID, ScriptHash, TypeHash, NodeCount");
+					sw.WriteLine("			{0,-18}, {1}, {2}, {3,-32}, {4,-32}, {5}",
+						"ClassId", "IsStrippedType", "ScriptID", "ScriptHash", "TypeHash", "NodeCount");
 				}
 				foreach (var type in Types)
 				{
@@ -173,25 +172,25 @@ namespace Extract
 					var Tree = Util.GetMember<object>(type, "Tree");
 					var ScriptHash = Util.GetMember<Hash128>(type, "ScriptHash");
 					var TypeHash = Util.GetMember<Hash128>(type, "TypeHash");
-					var nodeCount = Tree == null ? "Null" : Util.GetMember<IReadOnlyList<object>>(Tree, "Nodes").Count.ToString();
-					sw.WriteLine($"			{ClassID}, {IsStrippedType}, {ScriptID}, {HashToString(ScriptHash)}, {HashToString(TypeHash)}, {nodeCount}");
+					var nodeCount = Tree == null ? "Null" : Util.GetMember<IList>(Tree, "Nodes").Count.ToString();
+					sw.WriteLine("			{0,-18}, {1,14}, {2,8}, {3}, {4}, {5}",
+						ClassID.ToString(), IsStrippedType, ScriptID, HashToString(ScriptHash), HashToString(TypeHash), nodeCount);
 				}
 			}
 			else
 			{
 				sw.WriteLine($"	File.Metadata.Hierarchy: Null");
 			}
-			sw.WriteLine($"	File.Metadata.Entries: {container.Metadata.Entries.Count}");
+			sw.WriteLine($"	File.Metadata.Entries: {container.Metadata.Entries.Length}");
 
 			var factory = new AssetFactory();
 			foreach (var entry in container.Metadata.Entries)
 			{
-				var info = entry.Value;
-				AssetInfo assetInfo = new AssetInfo(container, info.PathID, info.ClassID);
+				AssetInfo assetInfo = new AssetInfo(container, entry.PathID, entry.ClassID);
 				Object asset = factory.CreateAsset(assetInfo);
 				if (asset == null)
 				{
-					sw.WriteLine($"	  Unimplemented Asset: {info.ClassID}, {info.ScriptID}, {info.TypeID}, {info.PathID}, {info.IsStripped}");
+					sw.WriteLine($"	  Unimplemented Asset: {entry.ClassID}, {entry.ScriptID}, {entry.TypeID}, {entry.PathID}, {entry.IsStripped}");
 				}
 			}
 		}
@@ -208,20 +207,20 @@ namespace Extract
 		{
 			sw.WriteLine("BuildSettings");
 			sw.WriteLine($"  Version: {buildSettings.Version}");
-			sw.WriteLine($"  Scenes {buildSettings.Scenes.Count}");
-			for (int i = 0; i < buildSettings.Scenes.Count; i++)
+			sw.WriteLine($"  Scenes {buildSettings.Scenes.Length}");
+			for (int i = 0; i < buildSettings.Scenes.Length; i++)
 			{
 				var scene = buildSettings.Scenes[i];
 				sw.WriteLine($"	{i}: {scene}");
 			}
 			sw.WriteLine($"  PreloadedPlugins {buildSettings.PreloadedPlugins}");
-			for (int i = 0; i < buildSettings.PreloadedPlugins.Count; i++)
+			for (int i = 0; i < buildSettings.PreloadedPlugins.Length; i++)
 			{
 				var preloadedPlugin = buildSettings.PreloadedPlugins[i];
 				sw.WriteLine($"	{i}: {preloadedPlugin}");
 			}
-			sw.WriteLine($"  BuildTags {buildSettings.BuildTags.Count}");
-			for (int i = 0; i < buildSettings.BuildTags.Count; i++)
+			sw.WriteLine($"  BuildTags {buildSettings.BuildTags.Length}");
+			for (int i = 0; i < buildSettings.BuildTags.Length; i++)
 			{
 				var buildTag = buildSettings.BuildTags[i];
 				sw.WriteLine($"	{i}: {buildTag}");
@@ -242,27 +241,27 @@ namespace Extract
 			sw.WriteLine("MonoManager");
 			sw.WriteLine($"  HasCompileErrors {monoManager.HasCompileErrors}");
 			sw.WriteLine($"  EngineDllModDate {monoManager.EngineDllModDate}");
-			sw.WriteLine($"  CustomDlls {monoManager.CustomDlls?.Count}");
+			sw.WriteLine($"  CustomDlls {monoManager.CustomDlls?.Length}");
 			foreach (var dll in monoManager.CustomDlls ?? new string[] { })
 			{
 				sw.WriteLine($"    {dll}");
 			}
-			sw.WriteLine($"  AssemblyIdentifiers {monoManager.AssemblyIdentifiers?.Count}");
+			sw.WriteLine($"  AssemblyIdentifiers {monoManager.AssemblyIdentifiers?.Length}");
 			foreach (var dll in monoManager.AssemblyIdentifiers ?? new string[] { })
 			{
 				sw.WriteLine($"    {dll}");
 			}
-			sw.WriteLine($"  AssemblyNames {monoManager.AssemblyNames?.Count}");
+			sw.WriteLine($"  AssemblyNames {monoManager.AssemblyNames?.Length}");
 			foreach (var dll in monoManager.AssemblyNames ?? new string[] { })
 			{
 				sw.WriteLine($"    {dll}");
 			}
-			sw.WriteLine($"  AssemblyTypes {monoManager.AssemblyTypes?.Count}");
+			sw.WriteLine($"  AssemblyTypes {monoManager.AssemblyTypes?.Length}");
 			foreach (var dll in monoManager.AssemblyTypes ?? new int[] { })
 			{
 				sw.WriteLine($"    {dll}");
 			}
-			sw.WriteLine($"  Scripts {monoManager.Scripts.Count}");
+			sw.WriteLine($"  Scripts {monoManager.Scripts.Length}");
 			foreach (var dll in monoManager.Scripts ?? new PPtr<MonoScript>[] { })
 			{
 				sw.WriteLine($"    {dll}");
@@ -273,33 +272,25 @@ namespace Extract
 			var filename = Path.GetFileName(filepath);
 			try
 			{
-				var fileCollection = new FileCollection();
-
-				var scheme = FileCollection.LoadScheme(filepath, Path.GetFileName(filepath));
-
-				if (scheme is SerializedFileScheme serializedFileScheme)
+				var file = Util.LoadFile(filepath);
+				if (file is SerializedFile serializedFile)
 				{
-					var serializedFile = serializedFileScheme.ReadFile(fileCollection, fileCollection.AssemblyManager);
 					DumpFileInfo(serializedFile, Path.Combine(exportPath, filename));
 				}
-				if (scheme is BundleFileScheme bundleFileScheme)
+				if (file is BundleFile bundleFile)
 				{
-					var bundleFile = bundleFileScheme.ReadFile(fileCollection, fileCollection.AssemblyManager);
 					DumpFileListInfo(bundleFile, Path.Combine(exportPath, filename));
 				}
-				if (scheme is ArchiveFileScheme archiveFileScheme)
+				if (file is ArchiveFile archiveFile)
 				{
-					var archiveFile = archiveFileScheme.ReadFile(fileCollection, fileCollection.AssemblyManager);
 					DumpFileListInfo(archiveFile, Path.Combine(exportPath, filename));
 				}
-				if (scheme is WebFileScheme webFileScheme)
+				if (file is WebFile webfile)
 				{
-					var webfile = webFileScheme.ReadFile(fileCollection, fileCollection.AssemblyManager);
 					DumpFileListInfo(webfile, Path.Combine(exportPath, filename));
 				}
-				if (scheme is ResourceFileScheme resourceFileScheme)
+				if (file is ResourceFile resourceFile)
 				{
-					var resourceFile = resourceFileScheme.ReadFile();
 					UnknownFileType(resourceFile, filepath, Path.Combine(exportPath, filename));
 				}
 			}
@@ -307,6 +298,7 @@ namespace Extract
 			{
 				var errMessage = $"Error dumping file {filepath}\n{ex.ToString()}";
 				Logger.Log(LogType.Error, LogCategory.General, errMessage);
+				Directory.CreateDirectory(exportPath);
 				File.WriteAllText($"{exportPath}/{filename}.err.txt", errMessage);
 			}
 		}
@@ -326,113 +318,17 @@ namespace Extract
 				DumpFile(file, Path.Combine(exportPath, relPath));
 			}
 		}
-		public static void DumpSerializedTypes(string filePath, string managedPath, string exportPath)
-		{
-			Util.PrepareExportDirectory(exportPath);
-			Directory.CreateDirectory(exportPath);
-			var fileCollection = new FileCollection();
-			fileCollection.AssemblyManager.ScriptingBackEnd = ScriptingBackEnd.Mono;
-			foreach (var assembly in Directory.GetFiles(managedPath, "*.dll", SearchOption.TopDirectoryOnly))
-			{
-				fileCollection.AssemblyManager.Load(assembly);
-			}
-			var scheme = FileCollection.LoadScheme(filePath, Path.GetFileName(filePath));
-			var seralizedFiles = new List<SerializedFile>();
-			if (scheme is SerializedFileScheme serializedFileScheme)
-			{
-				var serializedFile = serializedFileScheme.ReadFile(fileCollection, fileCollection.AssemblyManager);
-				seralizedFiles.Add(serializedFile);
-
-			}
-			else if (scheme is BundleFileScheme bundleFileScheme)
-			{
-				var bundleFile = bundleFileScheme.ReadFile(fileCollection, fileCollection.AssemblyManager);
-				seralizedFiles.AddRange(bundleFile.SerializedFiles);
-			}
-			else
-			{
-				throw new Exception();
-			}
-
-			using (var sw = new StreamWriter($"{exportPath}/dump.txt"))
-			{
-				foreach (var serializedFile in seralizedFiles)
-				{
-					var assets = serializedFile.FetchAssets();
-					foreach (var asset in assets)
-					{
-						if (asset is MonoScript monoscript && monoscript.AssemblyName == "Assembly-CSharp")
-						{
-							SerializableType behaviourType = monoscript.GetBehaviourType();
-							if (behaviourType != null)
-							{
-								var Structure = behaviourType.CreateBehaviourStructure();
-								sw.WriteLine($"[{monoscript.AssemblyName}]{monoscript.Namespace}.{monoscript.Name}");
-								DumpSerializedTypes(Structure, sw, 0);
-								sw.WriteLine($"");
-							}
-							else
-							{
-								sw.WriteLine($"[{monoscript.AssemblyName}]{monoscript.Namespace}.{monoscript.Name} - No Behaviour Type");
-								sw.WriteLine($"");
-							}
-						}
-					}
-				}
-			}
-		}
-		public static void DumpSerializedTypes(SerializableStructure structure, StreamWriter sw, int indent)
-		{
-			string spaces = new string(' ', indent * 2);
-			if (indent > 10)
-			{
-				sw.WriteLine($"{spaces}Max depth exceded");
-			}
-			sw.WriteLine($"{spaces}{structure.Type} : {structure.Base?.ToString() ?? "object"}");
-			if(structure.Base != null && structure.Base.Type.Namespace != "UnityEngine")
-			{
-				DumpSerializedTypes(structure.Base, sw, indent + 1);
-			}
-			foreach (var field in structure.Fields)
-			{
-				spaces = new string(' ', (indent + 1) * 2);
-				if (field.Type == PrimitiveType.Complex)
-				{
-					ISerializableStructure ComplexType = Util.GetMember<ISerializableStructure>(field, "ComplexType");
-					if (ComplexType is SerializablePointer pptr)
-					{
-						sw.WriteLine($"{spaces}PPTR<{ComplexType}> {field.Name};");
-					}
-					else if(ComplexType is SerializableStructure fieldStructure)
-					{
-						sw.WriteLine($"{spaces}{fieldStructure} {field.Name};");
-						DumpSerializedTypes(fieldStructure, sw, indent + 1);
-					} else
-					{
-						sw.WriteLine($"{spaces}{ComplexType} {field.Name};");
-					}
-				}
-				else
-				{
-					sw.WriteLine($"{spaces}{field.Type} {field.Name};");
-				}
-			}
-		}
 		public static void DumpTypeTree(string filePath, string exportPath)
 		{
 			Directory.CreateDirectory(Path.GetDirectoryName(exportPath));
-			var fileCollection = new FileCollection();
-			var scheme = FileCollection.LoadScheme(filePath, Path.GetFileName(filePath));
+			var file = Util.LoadFile(filePath);
 			var seralizedFiles = new List<SerializedFile>();
-			if (scheme is SerializedFileScheme serializedFileScheme)
+			if (file is SerializedFile sf)
 			{
-				var serializedFile = serializedFileScheme.ReadFile(fileCollection, fileCollection.AssemblyManager);
-				seralizedFiles.Add(serializedFile);
-
+				seralizedFiles.Add(sf);
 			}
-			else if (scheme is BundleFileScheme bundleFileScheme)
+			else if (file is BundleFile bundleFile)
 			{
-				var bundleFile = bundleFileScheme.ReadFile(fileCollection, fileCollection.AssemblyManager);
 				seralizedFiles.AddRange(bundleFile.SerializedFiles);
 			}
 			else
@@ -441,9 +337,9 @@ namespace Extract
 			}
 			using (var sw = new StreamWriter(exportPath))
 			{
-				foreach (var file in seralizedFiles)
+				foreach (var serializedFile in seralizedFiles)
 				{
-					DumpTypeInfo(file, sw);
+					DumpTypeInfo(serializedFile, sw);
 				}
 			}
 		}

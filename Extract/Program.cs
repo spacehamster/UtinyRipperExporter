@@ -9,15 +9,11 @@ namespace Extract
 		static void Main(string[] args)
 		{
 			Logger.Instance = new ConsoleLogger("log.txt");
-			Config.IsAdvancedLog = true;
 			Stopwatch sw = new Stopwatch();
 			sw.Start();
 			Parser.Default.ParseArguments<ExportSettings>(args)
 				.WithParsed<ExportSettings>(o =>
 				{
-					Config.IsGenerateGUIDByContent = o.GUIDByContent;
-					Config.IsExportDependencies = o.ExportDependencies;
-					//Config.IsExportScriptsAsPublic = o.PublicScripts;
 					if (o.ExportScripts)
 					{
 						ScriptExporter.ExportAll(o.GameDir, o.ExportDir, o.ScriptByName);

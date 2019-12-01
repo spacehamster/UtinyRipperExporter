@@ -1,9 +1,5 @@
 ﻿using CommandLine;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Extract
 {
@@ -56,7 +52,7 @@ namespace Extract
 		public ShaderExportMode ShaderExportMode { get; set; }
 		[Option("condenseshadersubprograms", Default = false, Required = false, HelpText = "Condense the number of shader subprograms that are exported")]
 		public bool CondenseShaderSubprograms { get; set; }
-		[Option("exportversion", Required = false, HelpText = "Set the export version. Default is 2017.3.0f3. Use 'detect' to use the game's version")]
+		[Option("exportversion", Required = false, HelpText = "Set the export version. Default is the game's version.")]
 		public string ExportVersion { get; set; }
 	}
 }

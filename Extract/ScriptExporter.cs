@@ -6,11 +6,11 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using uTinyRipper;
-using uTinyRipper.Assembly;
-using uTinyRipper.AssetExporters;
 using uTinyRipper.Classes;
-using uTinyRipper.Exporters.Scripts;
-using uTinyRipper.SerializedFiles;
+using uTinyRipper.Converters;
+using uTinyRipper.Converters.Script;
+using uTinyRipper.Game;
+using uTinyRipper.Game.Assembly;
 using Object = uTinyRipper.Classes.Object;
 using Version = uTinyRipper.Version;
 
@@ -19,7 +19,7 @@ namespace Extract
 	public class ScriptExporter
 	{
 		string GameDir;
-		FileCollection fileCollection;
+		GameCollection fileCollection;
 		private string ExportPath;
 		ExportOptions options;
 		HashSet<string> m_LoadedFiles = new HashSet<string>();
@@ -29,12 +29,11 @@ namespace Extract
 			GameDir = gameDir;
 			ExportPath = exportPath;
 			ScriptByName = scriptByName;
-			options = new ExportOptions()
-			{
-				Version = new Version(2017, 3, 0, VersionType.Final, 3),
-				Platform = Platform.NoTarget,
-				Flags = TransferInstructionFlags.NoTransferInstructionFlags,
-			};
+			options = new ExportOptions(
+				new Version(2017, 3, 0, VersionType.Final, 3),
+				Platform.NoTarget,
+				TransferInstructionFlags.NoTransferInstructionFlags
+			);
 		}
 		public static void ExportAll(string GameDir, string exportPath, bool scriptByName)
 		{
@@ -55,15 +54,15 @@ namespace Extract
 			if (asset is MonoScript) return true;
 			return false;
 		}
-		private void RequestAssembly(string asm)
+		private string RequestAssembly(string asm)
 		{
 			Logger.Instance.Log(LogType.Debug, LogCategory.Debug, $"Requested Assembly {asm}");
 			if (!File.Exists($@"{GameDir}\Managed\{asm}.dll"))
 			{
 				Logger.Instance.Log(LogType.Warning, LogCategory.Debug, $"Can't find {asm}");
-				return;
+				return null;
 			}
-			fileCollection.LoadAssembly($@"{GameDir}\Managed\{asm}.dll");
+			return $@"{GameDir}\Managed\{asm}.dll";
 		}
 
 		private void RequestDepency(string dep)
@@ -115,16 +114,12 @@ namespace Extract
 		}
 		void DoExportDLL(string dllPath)
 		{
-			fileCollection = new FileCollection(new FileCollection.Parameters()
-			{
-				RequestAssemblyCallback = RequestAssembly,
-				RequestResourceCallback = RequestResource
-			});
-			fileCollection.AssemblyManager.ScriptingBackEnd = ScriptingBackEnd.Mono;
+			var fileCollection = Util.CreateGameCollection();
 			var assemblyManager = (AssemblyManager)fileCollection.AssemblyManager;
 			fileCollection.AssemblyManager.Load(dllPath);
-			fileCollection.Exporter.Export(ExportPath, fileCollection, new Object[] { }, options);
-			ScriptExportManager scriptManager = new ScriptExportManager(ExportPath);
+			fileCollection.Exporter.Export(ExportPath, fileCollection, new SerializedFile[] { }, options);
+
+			ScriptExportManager scriptManager = new ScriptExportManager(fileCollection.Layout, ExportPath);
 			AssemblyDefinition myLibrary = AssemblyDefinition.ReadAssembly(dllPath);
 			var refrences = myLibrary.MainModule.AssemblyReferences;
 			foreach (TypeDefinition type in myLibrary.MainModule.Types)
@@ -158,7 +153,6 @@ namespace Extract
 				managedPath
 			});
 			fileCollection = gameStructure.FileCollection;
-			fileCollection.AssemblyManager.ScriptingBackEnd = ScriptingBackEnd.Mono;
 			var scripts = fileCollection.FetchAssets().Where(o => o is MonoScript ms).ToArray();
 			foreach (Object asset in scripts)
 			{
@@ -173,7 +167,7 @@ namespace Extract
 					}
 				}
 			}
-			fileCollection.Exporter.Export(ExportPath, fileCollection, scripts, options);
+			gameStructure.Export(ExportPath, asset => asset is MonoScript);
 		}
 		//Refer MonoManager, ScriptAssetExporter, ScriptExportManager
 		void DoExport(Func<MonoScript, bool> selector = null)
@@ -188,7 +182,7 @@ namespace Extract
 			fileCollection = gameStructure.FileCollection;
 			if (selector == null) selector = (o) => true;
 			var assets = fileCollection.FetchAssets().Where(o => o is MonoScript ms && selector(ms)).ToArray();
-			ScriptExportManager scriptManager = new ScriptExportManager(ExportPath);
+			ScriptExportManager scriptManager = new ScriptExportManager(gameStructure.FileCollection.Layout, ExportPath);
 			Dictionary<Object, ScriptExportType> exportTypes = new Dictionary<Object, ScriptExportType>();
 			foreach (Object asset in assets)
 			{

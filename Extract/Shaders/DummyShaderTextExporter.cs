@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using uTinyRipper;
-using uTinyRipper.AssetExporters;
 using uTinyRipper.Classes;
 using uTinyRipper.Classes.Shaders;
-using uTinyRipper.Classes.Shaders.Exporters;
+using uTinyRipper.Converters;
+using uTinyRipper.Converters.Shaders;
 using Version = uTinyRipper.Version;
 
 namespace Extract
@@ -26,7 +23,7 @@ namespace Extract
 		sampler2D _MainTex;
 		struct Input
 		{
-		float2 uv_MainTex;
+			float2 uv_MainTex;
 		};
 		void surf(Input IN, inout SurfaceOutputStandard o)
 		{
