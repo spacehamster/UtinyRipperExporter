@@ -258,7 +258,7 @@ namespace Extract
 				asset.AssetInfo.GUID = new GUID(Guid.NewGuid());
 			}
 		}
-		public static void SetGUID(uTinyRipper.Classes.Object asset, Guid guid)
+		public static void SetGUID(uTinyRipper.Classes.Object asset, byte[] guid)
 		{
 			asset.AssetInfo.GUID = new GUID(guid);
 		}

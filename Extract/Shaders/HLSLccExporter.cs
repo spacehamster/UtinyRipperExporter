@@ -20,7 +20,7 @@ namespace Extract
 		public override string Extension => ".glsl";
 		public override void DoExport(string filePath, uTinyRipper.Version version, ref ShaderSubProgram subProgram)
 		{
-			byte[] exportData = DXShaderProgramRestorer.RestoreProgramData(version, m_graphicApi, subProgram);
+			/*byte[] exportData = DXShaderProgramRestorer.RestoreProgramData(version, m_graphicApi, subProgram);
 			WrappedGlExtensions ext = new WrappedGlExtensions();
 			ext.ARB_explicit_attrib_location = 1;
 			ext.ARB_explicit_uniform_location = 1;
@@ -35,7 +35,7 @@ namespace Extract
 			else
 			{
 				File.WriteAllText(filePath, shader.Text);
-			}
+			}*/
 		}
 		WrappedGLLang m_GLLang;
 		protected readonly GPUPlatform m_graphicApi;

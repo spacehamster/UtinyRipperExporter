@@ -95,8 +95,7 @@ namespace Extract
 						using (MD5 md5 = MD5.Create())
 						{
 							var data = md5.ComputeHash(Encoding.UTF8.GetBytes($"{script.AssemblyName}.{script.Namespace}.{script.ClassName}"));
-							var newGuid = new Guid(data);
-							Util.SetGUID(script, newGuid);
+							Util.SetGUID(script, data);
 						}
 					}
 				}
@@ -110,10 +109,8 @@ namespace Extract
 						using (MD5 md5 = MD5.Create())
 						{
 							var data = md5.ComputeHash(Encoding.UTF8.GetBytes($"{shader.ValidName}"));
-							var newGuid = new Guid(data);
-							var engGuid = new GUID(newGuid);
-							Util.SetGUID(shader, newGuid);
-							Console.WriteLine($"Set shader {shader.ValidName} to Guid {engGuid}");
+							Util.SetGUID(shader, data);
+							Console.WriteLine($"Set shader {shader.ValidName}");
 						}
 					}
 				}

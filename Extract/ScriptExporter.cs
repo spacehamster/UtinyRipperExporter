@@ -162,8 +162,7 @@ namespace Extract
 					using (MD5 md5 = MD5.Create())
 					{
 						var data = md5.ComputeHash(Encoding.UTF8.GetBytes($"{script.AssemblyName}.{script.Namespace}.{script.ClassName}"));
-						var newGuid = new Guid(data);
-						Util.SetGUID(script, newGuid);
+						Util.SetGUID(script, data);
 					}
 				}
 			}
@@ -192,8 +191,7 @@ namespace Extract
 					using (MD5 md5 = MD5.Create())
 					{
 						var data = md5.ComputeHash(Encoding.UTF8.GetBytes($"{script.AssemblyName}.{script.Namespace}.{script.ClassName}"));
-						var newGuid = new Guid(data);
-						Util.SetGUID(script, newGuid);
+						Util.SetGUID(script, data);
 					}
 				}
 				ScriptExportType exportType = script.GetExportType(scriptManager);
