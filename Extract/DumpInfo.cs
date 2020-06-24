@@ -79,16 +79,7 @@ namespace Extract
 			sw.WriteLine("BundleFile");
 			var metadata = bundleFile.Metadata;
 			var header = bundleFile.Header;
-			sw.WriteLine("  Metadata: Entry.BlobIndex, Entry.Name, Entry.NameOrigin");
-			foreach (var entry in metadata.Entries)
-			{
-				sw.WriteLine($"	{entry.BlobIndex}, {entry.Name}, {entry.NameOrigin}");
-			}
-			sw.WriteLine("  Header");
-			sw.WriteLine($"	EngineVersion: {header.EngineVersion}");
-			sw.WriteLine($"	Generation: {header.Generation}");
-			sw.WriteLine($"	PlayerVersion: {header.PlayerVersion}");
-			sw.WriteLine($"	Type: {header.Type}");
+			sw.WriteLine("  TODO");
 		}
 		static void DumpObjectInfo(IEnumerable<Object> objects, StreamWriter sw)
 		{
@@ -143,12 +134,11 @@ namespace Extract
 			{
 				sw.WriteLine($"	File.Dependency: {dep}");
 				sw.WriteLine($"	  Dependency.AssetPath: {dep.AssetPath}");
-				sw.WriteLine($"	  Dependency.FilePath: {dep.FilePath}");
-				sw.WriteLine($"	  Dependency.FilePathOrigin: {dep.FilePathOrigin}");
 			}
 			if (container.Metadata != null)
 			{
-				var SerializeTypeTrees = container.Metadata.Hierarchy.SerializeTypeTrees;
+				//TODO container.Metadata.Hierarchy
+				/*var SerializeTypeTrees = container.Metadata.Hierarchy.SerializeTypeTrees;
 				var Types = container.Metadata.Hierarchy.Types;
 				var Version = container.Metadata.Hierarchy.Version;
 				var Platform = container.Metadata.Hierarchy.Platform;
@@ -175,13 +165,14 @@ namespace Extract
 					var nodeCount = Tree == null ? "Null" : Util.GetMember<IList>(Tree, "Nodes").Count.ToString();
 					sw.WriteLine("			{0,-18}, {1,14}, {2,8}, {3}, {4}, {5}",
 						ClassID.ToString(), IsStrippedType, ScriptID, HashToString(ScriptHash), HashToString(TypeHash), nodeCount);
-				}
+				}*/
 			}
 			else
 			{
 				sw.WriteLine($"	File.Metadata.Hierarchy: Null");
 			}
-			sw.WriteLine($"	File.Metadata.Entries: {container.Metadata.Entries.Length}");
+			//TODO
+			/*sw.WriteLine($"	File.Metadata.Entries: {container.Metadata.Entries.Length}");
 
 			var factory = new AssetFactory();
 			foreach (var entry in container.Metadata.Entries)
@@ -192,7 +183,7 @@ namespace Extract
 				{
 					sw.WriteLine($"	  Unimplemented Asset: {entry.ClassID}, {entry.ScriptID}, {entry.TypeID}, {entry.PathID}, {entry.IsStripped}");
 				}
-			}
+			}*/
 		}
 		public static string HashToString(Hash128 hash)
 		{
@@ -363,7 +354,8 @@ namespace Extract
 			sw.WriteLine($"NameOrigin {serializedFile.NameOrigin}");
 			sw.WriteLine($"Platform {serializedFile.Platform}");
 			sw.WriteLine($"Version {serializedFile.Version}");
-			sw.WriteLine($"Preloads:");
+			//TODO
+			/*sw.WriteLine($"Preloads:");
 			foreach (var ptr in serializedFile.Metadata.Preloads)
 			{
 				sw.WriteLine($"\t{ptr}");
@@ -393,7 +385,7 @@ namespace Extract
 				var Dump = Util.GetMember<string>(Tree, "Dump");
 				sw.WriteLine($"\t{Dump}");
 				sw.WriteLine($"");
-			}
+			}*/
 			sw.WriteLine($"");
 		}
 	}

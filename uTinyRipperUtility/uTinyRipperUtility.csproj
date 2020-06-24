@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>uTinyRipperUtility</RootNamespace>
     <AssemblyName>uTinyRipperUtility</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <LangVersion>7.3</LangVersion>
@@ -159,14 +159,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>texgenpack.dll</TargetPath>
     </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\UtinyRipper\uTinyRipperGUI\Libraries\x86\TextureConverter.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>TextureConverter.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\UtinyRipper\uTinyRipperGUI\Libraries\x86\TextureConverterWrapper_x86.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>TextureConverterWrapper.dll</TargetPath>
-    </ContentWithTargetPath>
   </ItemGroup>
   <ItemGroup Condition=" '$(Platform)' == 'x64' ">
     <ContentWithTargetPath Include="..\UtinyRipper\uTinyRipperGUI\Libraries\x64\crunch_x64.dll">
@@ -184,14 +176,6 @@
     <ContentWithTargetPath Include="..\UtinyRipper\uTinyRipperGUI\Libraries\x64\texgenpack_x64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>texgenpack.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\UtinyRipper\uTinyRipperGUI\Libraries\x64\TextureConverter.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>TextureConverter.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\UtinyRipper\uTinyRipperGUI\Libraries\x64\TextureConverterWrapper_x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>TextureConverterWrapper.dll</TargetPath>
     </ContentWithTargetPath>
   </ItemGroup>
   <ItemGroup>

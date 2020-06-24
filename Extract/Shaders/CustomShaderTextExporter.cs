@@ -38,7 +38,6 @@ namespace Extract
 				case ShaderGpuProgramType.DX11VertexSM40:
 				case ShaderGpuProgramType.DX11VertexSM50:
 				case ShaderGpuProgramType.MetalVS:
-				case ShaderGpuProgramType.PSVertex:
 					return "VS";
 				case ShaderGpuProgramType.DX9PixelSM20:
 				case ShaderGpuProgramType.DX9PixelSM30:
@@ -46,7 +45,6 @@ namespace Extract
 				case ShaderGpuProgramType.DX11PixelSM40:
 				case ShaderGpuProgramType.DX11PixelSM50:
 				case ShaderGpuProgramType.MetalFS:
-				case ShaderGpuProgramType.PSPixel:
 					return "PS";
 				case ShaderGpuProgramType.DX11GeometrySM40:
 				case ShaderGpuProgramType.DX11GeometrySM50:
@@ -66,7 +64,7 @@ namespace Extract
 			var filePath = (writer.BaseStream as FileStream).Name;
 			var outDir = $"{Path.GetDirectoryName(filePath)}/{Path.GetFileNameWithoutExtension(filePath)}";
 			Directory.CreateDirectory(outDir);
-			var filename = $"{ProgramTypeToName(subProgram.ProgramType)}_{Util.HashBytes(subProgram.ProgramData)}";
+			var filename = $"{ProgramTypeToName(subProgram.GetProgramType(writer.Version))}_{Util.HashBytes(subProgram.ProgramData)}";
 			string outPath = $"{outDir}/{filename}{Extension}";
 			string error = null;
 			if (!File.Exists(outPath))

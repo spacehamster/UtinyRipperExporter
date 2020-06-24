@@ -228,7 +228,7 @@ namespace Extract
 						using (MD5 md5 = MD5.Create())
 						{
 							byte[] md5Hash = md5.ComputeHash(Encoding.ASCII.GetBytes(shader.ValidName));
-							assetInfo.GUID = new GUID(md5Hash);
+							assetInfo.GUID = new UnityGUID(md5Hash);
 						}
 					}
 				}
@@ -255,12 +255,12 @@ namespace Extract
 		{
 			foreach (var asset in assets)
 			{
-				asset.AssetInfo.GUID = new GUID(Guid.NewGuid());
+				asset.AssetInfo.GUID = new UnityGUID(Guid.NewGuid());
 			}
 		}
 		public static void SetGUID(uTinyRipper.Classes.Object asset, byte[] guid)
 		{
-			asset.AssetInfo.GUID = new GUID(guid);
+			asset.AssetInfo.GUID = new UnityGUID(guid);
 		}
 		static T CreateInstance<T>(params object[] parameters)
 		{
@@ -285,7 +285,8 @@ namespace Extract
 			object file = null;
 			if (scheme is SerializedFileScheme serializedFileScheme)
 			{
-				var platform = serializedFileScheme.Metadata != null &&
+				//TODO
+				/*var platform = serializedFileScheme.Metadata != null &&
 					serializedFileScheme.Metadata.Hierarchy.Platform != 0 ?
 					serializedFileScheme.Metadata.Hierarchy.Platform
 					: Platform.StandaloneWin64Player;
@@ -298,7 +299,7 @@ namespace Extract
 				var collection = new GameCollection(parameters);
 				file = Util.CreateInstance<SerializedFile>(collection, scheme);
 				typeof(SerializedFile).GetMethod("ReadData", AllBindingFlags)
-					.Invoke(file, new object[] { serializedFileScheme.Stream });
+					.Invoke(file, new object[] { serializedFileScheme.Stream });*/
 			}
 			if (scheme is BundleFileScheme bundleFileScheme)
 			{
