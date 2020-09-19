@@ -134,19 +134,29 @@ namespace Extract
 				scriptManager.Export(exportType);
 			}
 		}
+		string GetMainAssetPath()
+		{
+			var assets = new string[]
+			{
+				"globalgamemanagers.assets",
+				"mainData",
+				"data.Unity3d"
+			};
+			foreach(var asset in assets)
+			{
+				var mainAssetPath = Path.Combine(GameDir, asset);
+				if (File.Exists(mainAssetPath))
+				{
+					return mainAssetPath;
+				}
+			}
+			throw new Exception("Could not find main asset file");
+		}
 		void DoExportAll()
 		{
 			Util.PrepareExportDirectory(ExportPath);
 			var managedPath = Path.Combine(GameDir, "Managed");
-			var mainAssetPath = Path.Combine(GameDir, "globalgamemanagers.assets");
-			if (!File.Exists(mainAssetPath))
-			{
-				var mainData = Path.Combine(GameDir, "mainData");
-				if (File.Exists(mainData))
-				{
-					mainAssetPath = mainData;
-				}
-			}
+			var mainAssetPath = GetMainAssetPath();
 			var gameStructure = GameStructure.Load(new string[]
 			{
 				mainAssetPath,
