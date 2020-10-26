@@ -18,6 +18,7 @@ namespace Extract
 	public class CustomShaderAssetExporter : IAssetExporter
 	{
 		ExportSettings settings;
+
 		public CustomShaderAssetExporter()
 		{
 			settings = new ExportSettings();
@@ -30,7 +31,19 @@ namespace Extract
 		{
 			return true;
 		}
-
+		public bool IsDX11ExportMode(ShaderExportMode mode)
+		{
+			switch (mode)
+			{
+				case ShaderExportMode.GLSL:
+				case ShaderExportMode.Metal:
+				case ShaderExportMode.DXBytecode:
+				case ShaderExportMode.DXBytecodeRestored:
+					return true;
+				default:
+					return false;
+			}
+		}
 		//Refer ShaderAssetExporter
 		public bool Export(IExportContainer container, Object asset, string path)
 		{
@@ -41,10 +54,11 @@ namespace Extract
 				{
 					DummyShaderTextExporter.ExportShader(shader, container, fileStream, DefaultShaderExporterInstantiator);
 				}
-				else if (settings.ShaderExportMode == ShaderExportMode.GLSL || settings.ShaderExportMode == ShaderExportMode.Metal)
+				else if (IsDX11ExportMode(settings.ShaderExportMode))
 				{
 					shader.ExportBinary(container, fileStream, HLSLShaderExporterInstantiator);
-				} else if(settings.ShaderExportMode == ShaderExportMode.Asm)
+				}
+				else if(settings.ShaderExportMode == ShaderExportMode.Asm)
 				{
 					shader.ExportBinary(container, fileStream, AssemblyShaderExporterInstantiator);
 				} else
@@ -119,10 +133,23 @@ namespace Extract
 			switch (graphicApi)
 			{
 				case GPUPlatform.d3d11:
-					var glLang = settings.ShaderExportMode == ShaderExportMode.Metal ?
-						HLSLccWrapper.WrappedGLLang.LANG_METAL :
-						HLSLccWrapper.WrappedGLLang.LANG_DEFAULT;
-					return new HLSLccExporter(graphicApi, glLang);
+					if(settings.ShaderExportMode == ShaderExportMode.DXBytecode)
+					{
+						return new DxBytecodeExporter(graphicApi, restore:false);
+					}
+					if (settings.ShaderExportMode == ShaderExportMode.DXBytecodeRestored)
+					{
+						return new DxBytecodeExporter(graphicApi, restore:true);
+					}
+					if (settings.ShaderExportMode == ShaderExportMode.GLSL)
+					{
+						return new HLSLccExporter(graphicApi, HLSLccWrapper.WrappedGLLang.LANG_DEFAULT);
+					}
+					if (settings.ShaderExportMode == ShaderExportMode.Metal)
+					{
+						return new HLSLccExporter(graphicApi, HLSLccWrapper.WrappedGLLang.LANG_METAL);
+					}
+					throw new Exception($"Unexpected shader mode {settings.ShaderExportMode}");
 				case GPUPlatform.d3d9:
 				case GPUPlatform.d3d11_9x:
 					return new AsmExporter(graphicApi);

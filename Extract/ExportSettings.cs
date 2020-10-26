@@ -9,6 +9,8 @@ namespace Extract
 		Asm,
 		GLSL,
 		Metal,
+		DXBytecode,
+		DXBytecodeRestored,
 		Default
 	}
 	public class ExportSettings

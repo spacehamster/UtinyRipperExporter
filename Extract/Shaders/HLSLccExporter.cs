@@ -1,12 +1,9 @@
 ﻿using DXShaderRestorer;
 using HLSLccWrapper;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using uTinyRipper.Classes.Shaders;
+using uTinyRipperGUI.Exporters;
 
 namespace Extract
 {
@@ -20,22 +17,35 @@ namespace Extract
 		public override string Extension => ".glsl";
 		public override void DoExport(string filePath, uTinyRipper.Version version, ref ShaderSubProgram subProgram)
 		{
-			/*byte[] exportData = DXShaderProgramRestorer.RestoreProgramData(version, m_graphicApi, subProgram);
-			WrappedGlExtensions ext = new WrappedGlExtensions();
-			ext.ARB_explicit_attrib_location = 1;
-			ext.ARB_explicit_uniform_location = 1;
-			ext.ARB_shading_language_420pack = 0;
-			ext.OVR_multiview = 0;
-			ext.EXT_shader_framebuffer_fetch = 0;
-			Shader shader = Shader.TranslateFromMem(exportData, m_GLLang, ext);
-			if (shader.OK == 0)
+			using (MemoryStream stream = new MemoryStream(subProgram.ProgramData))
 			{
-				throw new Exception($"Error {shader.OK}");
+				using (BinaryReader reader = new BinaryReader(stream))
+				{
+					DXDataHeader header = new DXDataHeader();
+					header.Read(reader, version);
+					if(header.UAVs > 0)
+					{
+						File.WriteAllText(filePath, "Cannot convert HLSL shaders with UAVs to GLSL");
+						return;
+					}
+					byte[] exportData = DXShaderProgramRestorer.RestoreProgramData(reader, version, ref subProgram);
+					WrappedGlExtensions ext = new WrappedGlExtensions();
+					ext.ARB_explicit_attrib_location = 1;
+					ext.ARB_explicit_uniform_location = 1;
+					ext.ARB_shading_language_420pack = 0;
+					ext.OVR_multiview = 0;
+					ext.EXT_shader_framebuffer_fetch = 0;
+					Shader shader = Shader.TranslateFromMem(exportData, m_GLLang, ext);
+					if (shader.OK == 0)
+					{
+						throw new Exception($"Error {shader.OK}");
+					}
+					else
+					{
+						File.WriteAllText(filePath, shader.Text);
+					}
+				}
 			}
-			else
-			{
-				File.WriteAllText(filePath, shader.Text);
-			}*/
 		}
 		WrappedGLLang m_GLLang;
 		protected readonly GPUPlatform m_graphicApi;

@@ -1,5 +1,4 @@
 ﻿using DotNetDxc;
-using DXShaderRestorer;
 using System;
 using System.IO;
 using System.Reflection;
