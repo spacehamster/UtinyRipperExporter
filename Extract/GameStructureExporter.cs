@@ -132,6 +132,7 @@ namespace Extract
 			{
 				options.Filter = filter;
 			}
+			options.ExportDependencies = true;
 			var requestedFiles = new HashSet<ISerializedFile>();
 			foreach (var path in requestedPaths)
 			{
@@ -231,7 +232,10 @@ namespace Extract
 			{
 				toExportList = assetPaths.ToList();
 			}
-			toExportList.Add($"{gameDir}/Managed");
+			if (Directory.Exists($"{gameDir}/Managed"))
+			{
+				toExportList.Add($"{gameDir}/Managed");
+			}
 			Console.WriteLine($"Exporting Files:\n{string.Join("\n", toExportList)}");
 			new GameStructureExporter(settings, toExportList).ExportBundles(assetPaths, filter);
 		}

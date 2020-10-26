@@ -285,13 +285,12 @@ namespace Extract
 			object file = null;
 			if (scheme is SerializedFileScheme serializedFileScheme)
 			{
-				//TODO
-				/*var platform = serializedFileScheme.Metadata != null &&
-					serializedFileScheme.Metadata.Hierarchy.Platform != 0 ?
-					serializedFileScheme.Metadata.Hierarchy.Platform
+				var platform = serializedFileScheme.Metadata != null &&
+					serializedFileScheme.Metadata.TargetPlatform != 0 ?
+					serializedFileScheme.Metadata.TargetPlatform
 					: Platform.StandaloneWin64Player;
 				var version = serializedFileScheme.Metadata != null ?
-					serializedFileScheme.Metadata.Hierarchy.Version
+					serializedFileScheme.Metadata.UnityVersion
 					: new Version();
 				var layoutInfo = new LayoutInfo(version, platform, serializedFileScheme.Flags);
 				var layout = new AssetLayout(layoutInfo);
@@ -299,7 +298,7 @@ namespace Extract
 				var collection = new GameCollection(parameters);
 				file = Util.CreateInstance<SerializedFile>(collection, scheme);
 				typeof(SerializedFile).GetMethod("ReadData", AllBindingFlags)
-					.Invoke(file, new object[] { serializedFileScheme.Stream });*/
+					.Invoke(file, new object[] { serializedFileScheme.Stream });
 			}
 			if (scheme is BundleFileScheme bundleFileScheme)
 			{

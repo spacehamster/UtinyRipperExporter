@@ -6,6 +6,7 @@ using System.Linq;
 using uTinyRipper;
 using uTinyRipper.Classes;
 using uTinyRipper.Classes.Misc;
+using uTinyRipper.SerializedFiles;
 using Object = uTinyRipper.Classes.Object;
 
 namespace Extract
@@ -20,7 +21,7 @@ namespace Extract
 			{
 				WriteFileInfo(container, sw);
 				sw.WriteLine("");
-				DumpObjectInfo(container.FetchAssets(), sw);
+				DumpObjectInfo(container, sw);
 				if (container.Name == "globalgamemanagers")
 				{
 					BuildSettings buildSettings = (BuildSettings)container.FetchAssets().FirstOrDefault(asset => asset is BuildSettings);
@@ -70,7 +71,7 @@ namespace Extract
 					sw.WriteLine("");
 					WriteFileInfo(serializedFile, sw);
 					sw.WriteLine("");
-					DumpObjectInfo(serializedFile.FetchAssets(), sw);
+					DumpObjectInfo(serializedFile, sw);
 				}
 			}
 		}
@@ -81,11 +82,12 @@ namespace Extract
 			var header = bundleFile.Header;
 			sw.WriteLine("  TODO");
 		}
-		static void DumpObjectInfo(IEnumerable<Object> objects, StreamWriter sw)
+		static void DumpObjectInfo(SerializedFile file, StreamWriter sw)
 		{
-			sw.WriteLine("{0,-40}, {1,15}, {2,-32}, {3}, {4}, {5}, {6}",
+			sw.WriteLine("{0,-40}, {1,30}, {2,-32}, {3}, {4}, {5}, {6}",
 				"Name", "ClassID", "GUID", "FileIndex", "PathID", "IsValid", "Extra");
-			foreach (var asset in objects)
+			var lookup = file.FetchAssets().ToDictionary(a => a.PathID, a => a);
+			foreach (var asset in file.FetchAssets())
 			{
 				var name = Util.GetName(asset);
 				var pptr = asset.File.CreatePPtr(asset);
@@ -97,7 +99,16 @@ namespace Extract
 					scriptName += $"{ms.ClassName}:{HashToString(ms.PropertiesHash)}";
 					extra = scriptName;
 				}
-				sw.WriteLine($"{name,-40}, {asset.ClassID,15}, {asset.GUID}, {pptr.FileIndex,9}, {asset.PathID,6}, {extra}");
+				sw.WriteLine($"{name,-40}, {asset.ClassID,30}, {asset.GUID}, {pptr.FileIndex,9}, {asset.PathID,6}, {extra}");
+			}
+			sw.WriteLine();
+			sw.WriteLine("Cannot parse");
+			sw.WriteLine("{0,-6}, {1,-40}, {2,-6}, {3,-15}, {4,-8}, {5,-11}, {6,-9}, {7,-8}",
+	"FileID", "ClassID", "TypeID", "ScriptTypeIndex", "Stripped", "IsDestroyed", "ByteStart", "ByteSize");
+			foreach (var info in file.Metadata.Object)
+			{
+				if (lookup.ContainsKey(info.FileID)) continue;
+				sw.WriteLine($"{info.FileID,-6}, {info.ClassID,-40}, {info.TypeID, -6}, {info.ScriptTypeIndex,-15}, {info.Stripped,-8}, {info.IsDestroyed,-11}, {info.ByteStart,-9}, {info.ByteSize,-8}");
 			}
 		}
 		static void UnknownFileType(object file, string filepath, string exportPath)
