@@ -10,17 +10,26 @@ namespace Extract
 {
 	public class AsmExporter : CustomShaderTextExporter
 	{
-		MethodInfo dissassembleMethod;
+		private static MethodInfo m_DissassembleMethod;
+		public static MethodInfo DissassembleMethod
+		{
+			get
+			{
+				if(m_DissassembleMethod == null)
+				{
+					var type = Type.GetType("D3DCompiler.D3DCompiler, uTinyRipperUtility");
+					m_DissassembleMethod = type.GetMethod("D3DDisassemble");
+				}
+				return m_DissassembleMethod;
+			}
+		}
 		public AsmExporter(GPUPlatform graphicApi)
 		{
 			m_graphicApi = graphicApi;
-			var type = Type.GetType("D3DCompiler.D3DCompiler, uTinyRipperUtility");
-			dissassembleMethod = type.GetMethod("D3DDisassemble");
 		}
 		public override string Extension => ".asm";
-		public override void DoExport(string filePath, uTinyRipper.Version version, ref ShaderSubProgram subProgram)
+		public static string Disassemble(byte[] exportData, uTinyRipper.Version version, GPUPlatform m_graphicApi)
 		{
-			byte[] exportData = subProgram.ProgramData;
 			int dataOffset = 0;
 			if (DXDataHeader.HasHeader(m_graphicApi))
 			{
@@ -37,13 +46,19 @@ namespace Extract
 			Marshal.Copy(exportData, dataOffset, unmanagedPointer, dataLength);
 
 			var parameters = new object[] { unmanagedPointer, (uint)dataLength, (uint)0, null, null };
-			dissassembleMethod.Invoke(null, parameters);
+			DissassembleMethod.Invoke(null, parameters);
 			IDxcBlob disassembly = (IDxcBlob)parameters[4];
 			string disassemblyText = GetStringFromBlob(disassembly);
-			File.WriteAllText(filePath, disassemblyText);
 			Marshal.FreeHGlobal(unmanagedPointer);
+			return disassemblyText;
 		}
-		private string GetStringFromBlob(IDxcBlob blob)
+		public override void DoExport(string filePath, uTinyRipper.Version version, ref ShaderSubProgram subProgram)
+		{
+			byte[] exportData = subProgram.ProgramData;
+			string disassemblyText = Disassemble(exportData, version, m_graphicApi);
+			File.WriteAllText(filePath, disassemblyText);
+		}
+		private static string GetStringFromBlob(IDxcBlob blob)
 		{
 			return Marshal.PtrToStringAnsi(blob.GetBufferPointer());
 		}

@@ -1,7 +1,9 @@
-﻿using DXShaderRestorer;
+﻿using DotNetDxc;
+using DXShaderRestorer;
 using HLSLccWrapper;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using uTinyRipper.Classes.Shaders;
 using uTinyRipperGUI.Exporters;
 
@@ -17,6 +19,10 @@ namespace Extract
 		public override string Extension => ".glsl";
 		public override void DoExport(string filePath, uTinyRipper.Version version, ref ShaderSubProgram subProgram)
 		{
+#if DEBUG
+			string disassemblyText = "";
+			disassemblyText = AsmExporter.Disassemble(subProgram.ProgramData, version, m_graphicApi);
+#endif
 			using (MemoryStream stream = new MemoryStream(subProgram.ProgramData))
 			{
 				using (BinaryReader reader = new BinaryReader(stream))
@@ -49,5 +55,10 @@ namespace Extract
 		}
 		WrappedGLLang m_GLLang;
 		protected readonly GPUPlatform m_graphicApi;
+
+		/// <summary>
+		/// 'DXBC' ascii
+		/// </summary>
+		protected const uint DXBCFourCC = 0x43425844;
 	}
 }

@@ -282,6 +282,37 @@ namespace Extract
 		public static object LoadFile(string filepath)
 		{
 			var scheme = GameCollection.LoadScheme(filepath, Path.GetFileName(filepath));
+			object file = LoadScheme(scheme);
+			scheme.Dispose();
+			return file;
+		}
+		private static void AddScheme(FileList fileList, FileSchemeList list)
+		{
+			foreach (var scheme in list.Schemes)
+			{
+				AddScheme(fileList, scheme);
+			}
+		}
+		private static void AddScheme(FileList fileList, FileScheme scheme)
+		{
+			var file = LoadScheme(scheme);
+			switch (scheme.SchemeType)
+			{
+				case FileEntryType.Serialized:
+					fileList.AddSerializedFile((SerializedFile)file);
+					break;
+				case FileEntryType.Bundle:
+				case FileEntryType.Archive:
+				case FileEntryType.Web:
+					fileList.AddSerializedFile((SerializedFile)file);
+					break;
+				case FileEntryType.Resource:
+					fileList.AddResourceFile((ResourceFile)file);
+					break;
+			}
+		}
+		private static object LoadScheme(FileScheme scheme)
+		{
 			object file = null;
 			if (scheme is SerializedFileScheme serializedFileScheme)
 			{
@@ -303,20 +334,22 @@ namespace Extract
 			if (scheme is BundleFileScheme bundleFileScheme)
 			{
 				file = Util.CreateInstance<BundleFile>(scheme);
+				AddScheme((BundleFile)file, bundleFileScheme);
 			}
 			if (scheme is ArchiveFileScheme archiveFileScheme)
 			{
 				file = Util.CreateInstance<ArchiveFile>(scheme);
+				AddScheme((ArchiveFile)file, archiveFileScheme);
 			}
 			if (scheme is WebFileScheme webFileScheme)
 			{
 				file = Util.CreateInstance<WebFile>(scheme);
+				AddScheme((WebFile)file, webFileScheme);
 			}
 			if (scheme is ResourceFileScheme resourceFileScheme)
 			{
 				file = Util.CreateInstance<ResourceFile>(scheme);
 			}
-			scheme.Dispose();
 			return file;
 		}
 	}

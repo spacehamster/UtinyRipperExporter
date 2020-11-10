@@ -310,7 +310,7 @@ namespace Extract
 			foreach (var file in AllFilesInFolder(gameDir))
 			{
 				var ext = Path.GetExtension(file);
-				if (ext != "" && ext != ".assets" && ext != ".unity3d") continue;
+				if (ext != "" && ext != ".assets" && ext != ".unity3d" && ext != ".bundle") continue;
 				var relPath = Util.GetRelativePath(file, gameDir);
 				relPath = Path.GetDirectoryName(relPath);
 				if (Directory.Exists(file))
