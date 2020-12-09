@@ -99,6 +99,23 @@ namespace Extract
 					scriptName += $"{ms.ClassName}:{HashToString(ms.PropertiesHash)}";
 					extra = scriptName;
 				}
+				if(asset is Shader shader)
+				{
+					if (Shader.IsSerialized(file.Version) || Shader.HasBlob(file.Version))  
+					{
+						var programTypes = shader.Blobs
+							.SelectMany(b => b.SubPrograms)
+							.Select(sp => sp.GetProgramType(file.Version))
+							.Distinct();
+						extra += string.Format("Platforms: {0} ProgramTypes: {1}",
+							string.Join(", ", shader.Platforms),
+							string.Join(", ", programTypes));
+					} else
+					{
+						extra += "Platforms: Text";
+					}
+
+				}
 				sw.WriteLine($"{name,-40}, {asset.ClassID,30}, {asset.GUID}, {pptr.FileIndex,9}, {asset.PathID,6}, {extra}");
 			}
 			sw.WriteLine();
