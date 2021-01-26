@@ -92,11 +92,7 @@ namespace Extract
 				{
 					if(asset is MonoScript script)
 					{
-						using (MD5 md5 = MD5.Create())
-						{
-							var data = md5.ComputeHash(Encoding.UTF8.GetBytes($"{script.AssemblyName}.{script.Namespace}.{script.ClassName}"));
-							Util.SetGUID(script, data);
-						}
+						Util.FixScript(script);
 					}
 				}
 			}

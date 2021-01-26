@@ -258,9 +258,24 @@ namespace Extract
 				asset.AssetInfo.GUID = new UnityGUID(Guid.NewGuid());
 			}
 		}
+		public static void FixScript(MonoScript script)
+		{
+			using (MD5 md5 = MD5.Create())
+			{
+				var fullName = $"{script.AssemblyName}.{script.Namespace}.{script.ClassName}";
+				var data = md5.ComputeHash(Encoding.UTF8.GetBytes(fullName));
+				SetGUID(script, data);
+			}
+		}
 		public static void SetGUID(uTinyRipper.Classes.Object asset, byte[] guid)
 		{
-			asset.AssetInfo.GUID = new UnityGUID(guid);
+			var swapped = new byte[guid.Length];
+			for(int i = 0; i < guid.Length; i++)
+			{
+				var x = guid[i];
+				swapped[i] = (byte)((x & 0x0F) << 4 | (x & 0xF0) >> 4);
+			}
+			asset.AssetInfo.GUID = new UnityGUID(swapped);
 		}
 		static T CreateInstance<T>(params object[] parameters)
 		{

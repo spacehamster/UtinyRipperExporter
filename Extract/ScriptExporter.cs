@@ -164,16 +164,11 @@ namespace Extract
 			});
 			fileCollection = gameStructure.FileCollection;
 			var scripts = fileCollection.FetchAssets().Where(o => o is MonoScript ms).ToArray();
-			foreach (Object asset in scripts)
+			if (ScriptByName)
 			{
-				MonoScript script = (MonoScript)asset;
-				if (ScriptByName)
+				foreach (Object asset in scripts)
 				{
-					using (MD5 md5 = MD5.Create())
-					{
-						var data = md5.ComputeHash(Encoding.UTF8.GetBytes($"{script.AssemblyName}.{script.Namespace}.{script.ClassName}"));
-						Util.SetGUID(script, data);
-					}
+					Util.FixScript((MonoScript)asset);
 				}
 			}
 			gameStructure.Export(ExportPath, asset => asset is MonoScript);
@@ -198,11 +193,7 @@ namespace Extract
 				MonoScript script = (MonoScript)asset;
 				if (ScriptByName)
 				{
-					using (MD5 md5 = MD5.Create())
-					{
-						var data = md5.ComputeHash(Encoding.UTF8.GetBytes($"{script.AssemblyName}.{script.Namespace}.{script.ClassName}"));
-						Util.SetGUID(script, data);
-					}
+					Util.FixScript(script);
 				}
 				ScriptExportType exportType = script.GetExportType(scriptManager);
 				exportTypes.Add(asset, exportType);
